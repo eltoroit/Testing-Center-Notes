@@ -509,6 +509,7 @@ Hopefully this has been a very helpful walkthrough of the Agentforce Testing Cen
 
 # Additional Information
 
--   Philippe Ozil (Salesforce Developer Advocate) published a good video named "Agentforce NOW codeLive: Test Agents with Agentforce Testing Center". You can watch it either in [LinkedIn](https://www.linkedin.com/events/7352044882699472896/) or in [YouTube](https://youtu.be/QaDRfagYSDk?t=887).
 -   Salesforce official documentation:
     -   [Agentforce Testing Center](https://help.salesforce.com/s/articleView?id=ai.agent_testing_center.htm&type=5)
+-   Philippe Ozil (Salesforce Developer Advocate) published a good video named "Agentforce NOW codeLive: Test Agents with Agentforce Testing Center". You can watch it either in [LinkedIn](https://www.linkedin.com/events/7352044882699472896/) or in [YouTube](https://youtu.be/QaDRfagYSDk?t=887).
+-   Blog Post "[Ensuring AI Accuracy: 5 Steps To Test Agentforce](https://admin.salesforce.com/blog/2025/ensuring-ai-accuracy-5-steps-to-test-agentforce)"
