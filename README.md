@@ -10,7 +10,8 @@ This guide will help you configure the Agentforce Testing Center to test your ag
 | ---------- | ------------------------------------------------ |
 | Author     | Andres Perez (ELTOROit)                          |
 | Repo       | https://github.com/eltoroit/Testing-Center-Notes |
-| 2025-09-14 | Published repo                                   |
+| 2025-09-14 | Added warning on **Evaluations**                 |
+| 2025-09-10 | Published repo                                   |
 | 2025-09-09 | Document created                                 |
 
 # Table of Contents <!-- omit from toc -->
@@ -43,6 +44,7 @@ This guide will help you configure the Agentforce Testing Center to test your ag
 		- [Columns AA - AF](#columns-aa---af)
 		- [Columns AG - AJ](#columns-ag---aj)
 	- [Why did we get only 83%?](#why-did-we-get-only-83)
+- [Additional Information](#additional-information)
 
 # Simple Demo Agent
 
@@ -182,6 +184,8 @@ Once you click **Next**, we get to the third page named **Test Data**.
 If you already have a CSV file, then you can just upload that. If you do not have a CSV file, then you can have AI generate one for you, or you can download the template and make changes, then export it as a CSV file and upload it.
 
 Once you click **Next**, we get to the fourth page named **Evaluations**.
+
+**⚠️ WARNING:** As of 2025-09-14, there is an issue where selecting any Evaluations crashes the testing center. For now, Do not select them.
 
 ![23_TC_Page4](images/23_TC_Page4.png "23_TC_Page4")
 
@@ -502,3 +506,9 @@ If I modified my test to reflect that, and run the test again, we should now get
 ![37_100Percent](images/37_100Percent.png "37_100Percent")
 
 Hopefully this has been a very helpful walkthrough of the Agentforce Testing Center.
+
+# Additional Information
+
+-   Philippe Ozil (Salesforce Developer Advocate) published a good video named "Agentforce NOW codeLive: Test Agents with Agentforce Testing Center". You can watch it either in [LinkedIn](https://www.linkedin.com/events/7352044882699472896/) or in [YouTube](https://youtu.be/QaDRfagYSDk?t=887).
+-   Salesforce official documentation:
+    -   [Agentforce Testing Center](https://help.salesforce.com/s/articleView?id=ai.agent_testing_center.htm&type=5)
