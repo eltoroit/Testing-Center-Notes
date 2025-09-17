@@ -1,0 +1,13 @@
+trigger tMessagingSession on MessagingSession(before insert) {
+	for (MessagingSession ms : Trigger.new) {
+		// Get Random String
+		String sDateTimeValue = JSON.serialize(System.now())
+			.removeStart('"')
+			.removeEnd('"');
+		Double dRandomNumber = Math.random() * 10000;
+		Integer iRandomValue = Integer.valueOf(Math.floor(dRandomNumber));
+		String sRandomFourDigits = String.valueOf(iRandomValue).leftPad(4, '0');
+		String sFinalString = sDateTimeValue + '.' + sRandomFourDigits;
+		ms.CustomMSID__c = sFinalString;
+	}
+}

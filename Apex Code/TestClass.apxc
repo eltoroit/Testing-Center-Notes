@@ -1,0 +1,111 @@
+/**
+ * @description
+ * Unit test for tMessagingSession trigger.
+ * This test verifies that the trigger correctly generates and populates
+ * the CustomMSID__c field with a timestamp and random 4-digit number.
+ */
+@isTest(seeAllData=true)
+public with sharing class tMessagingSession_Test {
+	/**
+	 * @description
+	 * Test method to verify that the trigger populates CustomMSID__c field
+	 * when a MessagingSession is inserted
+	 */
+	@isTest
+	static void testMessagingSessionTriggerPopulatesCustomMSID() {
+		// Create test MessagingSession record
+		MessagingSession testSession = createMessagingSessionRecord();
+
+		Test.startTest();
+		// Insert the MessagingSession to trigger the trigger
+		insert testSession;
+		Test.stopTest();
+
+		// Query the inserted record to verify the trigger executed
+		MessagingSession insertedSession = [
+			SELECT Id, CustomMSID__c
+			FROM MessagingSession
+			WHERE Id = :testSession.Id
+		];
+
+		// Verify CustomMSID__c was populated
+		System.assertNotEquals(
+			null,
+			insertedSession.CustomMSID__c,
+			'CustomMSID__c should be populated after insert'
+		);
+		System.assert(
+			insertedSession.CustomMSID__c.length() > 0,
+			'CustomMSID__c should not be empty'
+		);
+
+		// Verify the format: should contain a dot and end with 4 digits
+		System.assert(
+			insertedSession.CustomMSID__c.contains('.'),
+			'CustomMSID__c should contain a dot separator'
+		);
+
+		// Extract the part after the dot and verify it's 4 digits
+		// Parts shoud look like this: 2025-09-17T09:38:12.811Z.8463
+		String[] parts = insertedSession.CustomMSID__c.split('\\.');
+		System.debug(parts);
+		System.assertEquals(
+			3,
+			parts.size(),
+			'CustomMSID__c should have exactly 3 parts separated by dot'
+		);
+
+		String partDTTM = parts[0] + '.' + parts[1];
+		String partRandom = parts[2];
+		System.assertEquals(
+			4,
+			partRandom.length(),
+			'The random part should be exactly 4 digits'
+		);
+		System.assert(
+			partRandom.isNumeric(),
+			'The random part should be numeric'
+		);
+		try {
+			DateTime dttm = (DateTime) JSON.deserialize(
+				'"' + partDTTM + '"',
+				DateTime.class
+			);
+		} catch (Exception e) {
+			System.assert(
+				false,
+				'The timestamp part should be a valid DateTime: ' +
+				e.getMessage()
+			);
+		}
+	}
+
+	private static MessagingSession createMessagingSessionRecord() {
+		MessagingSession oldMS = [
+			SELECT
+				Id,
+				Name,
+				Status,
+				MessagingChannelId,
+				MessagingEndUserId,
+				ConversationId,
+				CustomMSID__c
+			FROM MessagingSession
+			// Pick a "good" sample record
+			// WHERE Status = 'Ended'
+			// WHERE Name = 'MS-00000010'
+			// I used this 'MessagingEndUserId' for manual testing, and now I can't delete the MS record!
+			WHERE MessagingEndUserId != '0PAgL000002aCXlWAM'
+			LIMIT 1
+		];
+
+		MessagingSession newMS = new MessagingSession();
+		newMS.MessagingChannelId = oldMS.MessagingChannelId;
+		newMS.MessagingEndUserId = oldMS.MessagingEndUserId;
+		newMS.ConversationId = oldMS.ConversationId;
+		newMS.Status = 'Ended';
+		// newMS.CustomMSID__c = <<< This will be set in the trigger;
+		// insert newMS; <<< Do not insert record, just return it.
+		return newMS;
+	}
+}
