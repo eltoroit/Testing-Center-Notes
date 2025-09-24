@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>DocPrefHorizontalScrollBarValue</key>
-	<string>3039</string>
+	<string>0</string>
 	<key>DocPrefIsAssetPanelOpen</key>
 	<integer>1</integer>
 	<key>DocPrefIsCanvasRulersEnabled</key>
@@ -35,7 +35,7 @@
 	<key>DocPrefWindowSizePos</key>
 	<string>97 0 1792 1055 0 0 1920 1055 </string>
 	<key>DocPrefZoomValue</key>
-	<string>2.93441400771601745845</string>
+	<string>0.59481778132205320730</string>
 	<key>SaveAsStandaloneProject</key>
 	<real>1</real>
 </dict>
