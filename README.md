@@ -2,7 +2,7 @@
 
 ![01_Cover](images/01_Cover.png "01_Cover")
 
-This guide will help you configure the Agentforce Testing Center to test your agents and gain confidence for your deployments.
+This guide will help you configure the Agentforce Testing Center to test the non-deterministic aspect of your agents, gaining confidence for your deployments.
 
 # Document History <!-- omit from toc -->
 
@@ -43,7 +43,10 @@ This guide will help you configure the Agentforce Testing Center to test your ag
 		- [Columns U - Z](#columns-u---z)
 		- [Columns AA - AF](#columns-aa---af)
 		- [Columns AG - AJ](#columns-ag---aj)
+	- [How does Testing Center determine a pas/failed on the response?](#how-does-testing-center-determine-a-pasfailed-on-the-response)
+		- [How to write teh expected response](#how-to-write-teh-expected-response)
 	- [Why did we get only 83%?](#why-did-we-get-only-83)
+- [How many test cases should I have?](#how-many-test-cases-should-i-have)
 - [Additional Information](#additional-information)
 
 # Simple Demo Agent
@@ -161,7 +164,7 @@ Do you remember that topic we mentioned at the beginning but that we have not us
 
 # Testing Center (Declarative)
 
-Now that we have a good understanding of how agents work, and how they can be tested in the **Agentforce Builder**, it's time to take our tests to the next level.
+Now that we have a good understanding of how agents work, and how they can be tested in the **Agentforce Builder**, it's time to take our tests to the next level and test them in the Agentforce Testing Center.
 
 ## Creating a test
 
@@ -177,29 +180,33 @@ Clicking **Next** takes you to the second page of the wizard named **Test Condit
 
 This part is important if you want to generate a template on the next page (Test Data), but it does not control the actual test execution. So, even though we will use the conversation history and context variables, I am not selecting the checkboxes because I am not generating a template. I will use a CSV file that I already have created.
 
+The context variables included here are the same as the ones you can set in the **Agentforce Builder**'s section named `Edit Preview Conditions`.
+
+![21a_ContextVariables](images/21a_ContextVariables.png "21a_ContextVariables")
+
 Once you click **Next**, we get to the third page named **Test Data**.
 
 ![22_TC_Page3](images/22_TC_Page3.png "22_TC_Page3")
 
-If you already have a CSV file, then you can just upload that. If you do not have a CSV file, then you can have AI generate one for you, or you can download the template and make changes, then export it as a CSV file and upload it.
+If you already have a CSV file, then you can just upload that. If you do not have a CSV file, then you can have AI generate one for you, or you can download the template (remeber to have checked the checkboxes in the previous page) and make changes, then export it as a CSV file and upload it.
 
 Once you click **Next**, we get to the fourth page named **Evaluations**.
 
-**⚠️ WARNING:** As of 2025-09-14, there is an issue where selecting any Evaluations crashes the testing center. For now, Do not select them.
-
 ![23_TC_Page4](images/23_TC_Page4.png "23_TC_Page4")
+
+**⚠️ WARNING:** As of 2025-09-14, there is an issue where selecting any Evaluations crashes the testing center. For now, **Do not** select them.
 
 This page allows you to specify what type of tests you want to execute. There are some tests that are always going to be executed, and some tests that are optional. You indicate here which optional tests (if any, or all) you want to execute.
 
-| Required | Name                | Description                                                                   |
-| -------- | ------------------- | ----------------------------------------------------------------------------- |
-| ✅       | Topic Assertion     | Was the **expected topic** selected?                                          |
-| ✅       | Action Assertion    | Were the **expected actions** selected? (there could be more than one action) |
-| ✅       | Response Evaluation | Did the response match the **expected response**                              |
-|          | Completeness        | Does the response include all necessary information?                          |
-|          | Coherence           | Is the response easy to read and free of grammatical errors?                  |
-|          | Conciseness         | Is the response short but accurate?                                           |
-|          | Latency             | How long (milliseconds) does the agent take to generate a response?           |
+| Required | Name                | Description                                                                                                                                                                                                                                         |
+| -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅       | Topic Assertion     | Was the **expected topic** selected?                                                                                                                                                                                                                |
+| ✅       | Action Assertion    | Were the **expected actions** selected?. Did it execute every action? Remember there could be more than one for a particular utterance                                                                                                              |
+| ✅       | Response Evaluation | Did the generatedresponse match the **expected response**. This does an "LLM comparison", not a word-by-word comparison                                                                                                                             |
+|          | Completeness        | Does the generatedresponse include all necessary information? Did the actual response sufficiently covered the desired content & not missing any important pieces of information requested by the user in the utterance                             |
+|          | Coherence           | Is the generatedresponse easy to understand and free of grammatical errors?                                                                                                                                                                         |
+|          | Conciseness         | Is the generated response concise (short but accurate) & captured the essence of desired content? Long-winded response can lead to lack of clarity, or being repetitive by including irrelevant content, ultimately leading to user dissatisfaction |
+|          | Latency             | How long (milliseconds) does the agent take to generate a response?                                                                                                                                                                                 |
 
 At the end of the wizard, click **Save & Run** to start the test.
 
@@ -481,6 +488,22 @@ Remember that **Conciseness** determines if the response is short but accurate. 
 
 Remember that **Latency** determines how long, in milliseconds, it takes the agent to generate a response.
 
+## How does Testing Center determine a pas/failed on the response?
+
+The generated response is evaluated against the expected response by calling the LLM "judge" model which provides a rating from 0 to 5.
+
+You will get a score of 5 when the actual response matches perfectly with the expected response, but note this is not a word-by-word or Regex match, it's a smart validation! So, for example "Your pizza has been ordered" is exactly the same as "your order is ready".
+
+If the generated response does not meet the expected response, then you get a score of 0. Any score of 3 or higher is considered a pass. It fails when the score is 0, 1, or 2 and it passes when the score is 3, 4, or 5.
+
+### How to write teh expected response
+
+| Category                                                  | Utterance                       | What should the expected response look like?                                                                                                                                                                 |
+| --------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Utterance is clear and does not need clarifying questions | How to reset my password?       | Detailed, specific expected response: `Click on the password reset button, and follow the instructios on the email`                                                                                          |
+| Utterance is not clear and needs clarifying questions     | Do you have a pool?             | Expected question to be asked: `which location are you looking for a pool?`                                                                                                                                  |
+| Utterance is clear but related to real time inquiries     | Is there a yoga class tomorrow? | High level response: `AI agent is querying the availability of yoga class for the selected date. If the yoga class is available, the response will list them. If not, the response will ask for other dates` |
+
 ## Why did we get only 83%?
 
 If you go back to the results of the test, you may remember we got only 83% for the actions
@@ -506,6 +529,37 @@ If I modified my test to reflect that, and run the test again, we should now get
 ![37_100Percent](images/37_100Percent.png "37_100Percent")
 
 Hopefully this has been a very helpful walkthrough of the Agentforce Testing Center.
+
+# How many test cases should I have?
+
+In theory you can have up to 500 test cases in one job, but in reality it may be lower than that.
+
+Because all tests go through the same common queue and there is a rate limit of LLM calls, your tests may fail if your job has too many test cases. Try to keep jobs smaller — ideally around 20–30 test cases per job. So, it's better to have multiple jobs to test different aspects of your agent, than one large job testing everything your agent does.
+
+How long do jobs take to execute?
+
+Considering that on average each test takes around 5 seconds, a job can take few minutes to complete. If we do the math and think about the maximum job size (500 test cases), it could take 2,500 seconds (40 minutes) to complete! It could even take longer if multiple jobs are executed at the same time. This is another reason to keep the jobs smaller than the maximum allowed.
+
+This brings us to the original question. There is no magic number of cases you should have per agent, you should have sufficient coverage based on the number of critical features (Topics), number of scenarios, number of persona, and some negative test cases.
+
+| **Aspect**          | **Examples**                                                                   |
+| ------------------- | ------------------------------------------------------------------------------ |
+| Features            | Case creation, Status update, Knowledge articles, Order tracking, Account info |
+| Scenarios           | Multiple matches found, No match found, Incomplete info, Channel constraints   |
+| Personas            | Authenticated user, Unauthenticated user, New user, Mobile user                |
+| Edge/Negative Cases | Incomplete info, Unsupported feature, Prompt injection scenarios               |
+
+So your total test cases should be a mix of: Features + Scenarios + Persona + Edge cases. For example:
+
+| Feature        | Scenario               | Persona              | Example                                                                                        |
+| -------------- | ---------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| Case creation  | Incomplete info        | Unauthenticated user | Creating a case but there is no known contact since the user is not authenticated              |
+| Status update  | Multiple matches found | Authenticated user   | Update order 123, but multiple orders found, agent can only update one order                   |
+| Order tracking | No match found         | Mobile user          | Where is the order 123? (No order exist for this user)                                         |
+| Querying leads | Unsupported feature    | Unauthenticated user | Are there any leads for `Andres Perez (ELTOROit)`? (This user is not allowed to ask for leads) |
+| ...            | ...                    | ...                  | ...                                                                                            |
+
+Start with 30-40 examples, add more rows until you feel like you feel comfortable your test is complete.
 
 # Additional Information
 
