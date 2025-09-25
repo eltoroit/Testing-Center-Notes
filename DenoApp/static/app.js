@@ -13,7 +13,6 @@ class JsonDataEditor {
 		this.editingMessageIndex = null;
 
 		this.initializeEventListeners();
-		this.renderAll();
 	}
 
 	initializeEventListeners() {
@@ -42,6 +41,39 @@ class JsonDataEditor {
 		document
 			.getElementById("addConversationBtn")
 			.addEventListener("click", () => this.addConversation());
+
+		// Merge field modal controls (only if elements exist)
+		const openMergeFieldModalBtn = document.getElementById(
+			"openMergeFieldModalBtn"
+		);
+		const openMergeFieldModalBtn2 = document.getElementById(
+			"openMergeFieldModalBtn2"
+		);
+		const closeMergeFieldModal = document.getElementById(
+			"closeMergeFieldModal"
+		);
+		const modalCancelBtn = document.getElementById("modalCancelBtn");
+
+		if (openMergeFieldModalBtn) {
+			openMergeFieldModalBtn.addEventListener("click", () =>
+				this.openMergeFieldModal()
+			);
+		}
+		if (openMergeFieldModalBtn2) {
+			openMergeFieldModalBtn2.addEventListener("click", () =>
+				this.openMergeFieldModal()
+			);
+		}
+		if (closeMergeFieldModal) {
+			closeMergeFieldModal.addEventListener("click", () =>
+				this.closeMergeFieldModal()
+			);
+		}
+		if (modalCancelBtn) {
+			modalCancelBtn.addEventListener("click", () =>
+				this.closeMergeFieldModal()
+			);
+		}
 	}
 
 	handleFileUpload(event) {
@@ -56,7 +88,10 @@ class JsonDataEditor {
 						delete uploadedData.processedConversations;
 					}
 					this.jsonData = uploadedData;
-					this.renderAll();
+					this.showMainContent();
+					this.renderDataTable();
+					this.renderConversations();
+					this.processConversations();
 					this.showToast("File uploaded successfully", "success");
 				} catch (error) {
 					this.showToast(
@@ -127,6 +162,270 @@ class JsonDataEditor {
 			const row = this.createDataRow(id, data);
 			tbody.appendChild(row);
 		});
+
+		// Also render merge fields
+		this.renderMergeFields();
+	}
+
+	renderMergeFields() {
+		// This method is now just for compatibility - modal handles everything
+	}
+
+	updateDataPointSelect() {
+		const dataPointSelect = document.getElementById("dataPointSelect");
+		const dataEntries = Object.keys(this.jsonData.data);
+
+		// Clear existing options except the first one
+		dataPointSelect.innerHTML =
+			'<option value="">Select a data point...</option>';
+
+		if (dataEntries.length === 0) {
+			const option = document.createElement("option");
+			option.value = "";
+			option.textContent = "No data entries available";
+			option.disabled = true;
+			dataPointSelect.appendChild(option);
+			return;
+		}
+
+		dataEntries.forEach((id) => {
+			const data = this.jsonData.data[id];
+			const option = document.createElement("option");
+			option.value = id;
+			option.textContent = `${data.key} (${id})`;
+			dataPointSelect.appendChild(option);
+		});
+	}
+
+	setupMergeFieldGenerator() {
+		const dataPointSelect = document.getElementById("dataPointSelect");
+		const mergeTypeSelect = document.getElementById("mergeTypeSelect");
+		const copyBtn = document.getElementById("copyMergeFieldBtn");
+
+		// Add event listeners
+		dataPointSelect.addEventListener("change", () =>
+			this.updateMergeFieldPreview()
+		);
+		mergeTypeSelect.addEventListener("change", () =>
+			this.updateMergeFieldPreview()
+		);
+		copyBtn.addEventListener("click", () => this.copyGeneratedMergeField());
+	}
+
+	updateMergeFieldPreview() {
+		const dataPointSelect = document.getElementById("dataPointSelect");
+		const mergeTypeSelect = document.getElementById("mergeTypeSelect");
+		const mergeFieldOutput = document.getElementById("mergeFieldOutput");
+		const mergeFieldValue = document.getElementById("mergeFieldValue");
+		const copyBtn = document.getElementById("copyMergeFieldBtn");
+
+		const selectedDataPoint = dataPointSelect.value;
+		const selectedType = mergeTypeSelect.value;
+
+		if (!selectedDataPoint || !selectedType) {
+			mergeFieldOutput.textContent =
+				"Select data point and type to generate merge field";
+			mergeFieldValue.textContent = "";
+			copyBtn.disabled = true;
+			return;
+		}
+
+		// Generate the merge field
+		const mergeField = `{!data.${selectedDataPoint}.${selectedType}}`;
+		mergeFieldOutput.textContent = mergeField;
+
+		// Show the actual value that will be resolved
+		const data = this.jsonData.data[selectedDataPoint];
+		let resolvedValue = "";
+
+		switch (selectedType) {
+			case "key":
+				resolvedValue = data.key;
+				break;
+			case "value":
+				resolvedValue = data.value;
+				break;
+			case "pair":
+				resolvedValue = `[${data.key}]=[${data.value}]`;
+				break;
+		}
+
+		mergeFieldValue.textContent = `Will resolve to: "${resolvedValue}"`;
+		copyBtn.disabled = false;
+	}
+
+	copyGeneratedMergeField() {
+		const mergeFieldOutput = document.getElementById("mergeFieldOutput");
+		const mergeField = mergeFieldOutput.textContent;
+
+		if (
+			mergeField &&
+			mergeField !== "Select data point and type to generate merge field"
+		) {
+			this.copyToClipboard(mergeField);
+			this.showToast(`Copied: ${mergeField}`, "success");
+		}
+	}
+
+	// Modal methods
+	openMergeFieldModal() {
+		const modal = document.getElementById("mergeFieldModal");
+		this.updateModalDataPointSelect();
+		this.setupModalMergeFieldGenerator();
+		modal.classList.add("show");
+
+		// Add click-outside-to-close functionality
+		modal.addEventListener("click", (e) => {
+			if (e.target === modal) {
+				this.closeMergeFieldModal();
+			}
+		});
+	}
+
+	closeMergeFieldModal() {
+		const modal = document.getElementById("mergeFieldModal");
+		modal.classList.remove("show");
+		// Reset form
+		document.getElementById("modalDataPointSelect").value = "";
+		document.getElementById("modalMergeTypeSelect").value = "";
+		document.getElementById("modalMergeFieldOutput").textContent =
+			"Select data point and type to generate merge field";
+		document.getElementById("modalMergeFieldValue").textContent = "";
+		document.getElementById("modalCopyMergeFieldBtn").disabled = true;
+	}
+
+	updateModalDataPointSelect() {
+		const dataPointSelect = document.getElementById("modalDataPointSelect");
+		const dataEntries = Object.keys(this.jsonData.data);
+
+		// Clear existing options except the first one
+		dataPointSelect.innerHTML =
+			'<option value="">Select a data point...</option>';
+
+		if (dataEntries.length === 0) {
+			const option = document.createElement("option");
+			option.value = "";
+			option.textContent = "No data entries available";
+			option.disabled = true;
+			dataPointSelect.appendChild(option);
+			return;
+		}
+
+		dataEntries.forEach((id) => {
+			const data = this.jsonData.data[id];
+			const option = document.createElement("option");
+			option.value = id;
+			option.textContent = `${data.key} (${id})`;
+			dataPointSelect.appendChild(option);
+		});
+	}
+
+	setupModalMergeFieldGenerator() {
+		const dataPointSelect = document.getElementById("modalDataPointSelect");
+		const mergeTypeSelect = document.getElementById("modalMergeTypeSelect");
+		const copyBtn = document.getElementById("modalCopyMergeFieldBtn");
+
+		// Remove existing event listeners by cloning the elements
+		const newDataPointSelect = dataPointSelect.cloneNode(true);
+		const newMergeTypeSelect = mergeTypeSelect.cloneNode(true);
+		dataPointSelect.parentNode.replaceChild(
+			newDataPointSelect,
+			dataPointSelect
+		);
+		mergeTypeSelect.parentNode.replaceChild(
+			newMergeTypeSelect,
+			mergeTypeSelect
+		);
+
+		// Add event listeners to new elements
+		newDataPointSelect.addEventListener("change", () =>
+			this.updateModalMergeFieldPreview()
+		);
+		newMergeTypeSelect.addEventListener("change", () =>
+			this.updateModalMergeFieldPreview()
+		);
+		copyBtn.addEventListener("click", () =>
+			this.copyModalGeneratedMergeField()
+		);
+	}
+
+	updateModalMergeFieldPreview() {
+		const dataPointSelect = document.getElementById("modalDataPointSelect");
+		const mergeTypeSelect = document.getElementById("modalMergeTypeSelect");
+		const mergeFieldOutput = document.getElementById(
+			"modalMergeFieldOutput"
+		);
+		const mergeFieldValue = document.getElementById("modalMergeFieldValue");
+		const copyBtn = document.getElementById("modalCopyMergeFieldBtn");
+
+		const selectedDataPoint = dataPointSelect.value;
+		const selectedType = mergeTypeSelect.value;
+
+		if (!selectedDataPoint || !selectedType) {
+			mergeFieldOutput.textContent =
+				"Select data point and type to generate merge field";
+			mergeFieldValue.textContent = "";
+			copyBtn.disabled = true;
+			return;
+		}
+
+		// Generate the merge field
+		const mergeField = `{!data.${selectedDataPoint}.${selectedType}}`;
+		mergeFieldOutput.textContent = mergeField;
+
+		// Show the actual value that will be resolved
+		const data = this.jsonData.data[selectedDataPoint];
+		let resolvedValue = "";
+
+		switch (selectedType) {
+			case "key":
+				resolvedValue = data.key;
+				break;
+			case "value":
+				resolvedValue = data.value;
+				break;
+			case "pair":
+				resolvedValue = `[${data.key}]=[${data.value}]`;
+				break;
+		}
+
+		mergeFieldValue.textContent = `Will resolve to: "${resolvedValue}"`;
+		copyBtn.disabled = false;
+	}
+
+	copyModalGeneratedMergeField() {
+		const mergeFieldOutput = document.getElementById(
+			"modalMergeFieldOutput"
+		);
+		const mergeField = mergeFieldOutput.textContent;
+
+		if (
+			mergeField &&
+			mergeField !== "Select data point and type to generate merge field"
+		) {
+			this.copyToClipboard(mergeField);
+			this.showToast(`Copied: ${mergeField}`, "success");
+			this.closeMergeFieldModal();
+		}
+	}
+
+	copyToClipboard(text) {
+		if (navigator.clipboard && window.isSecureContext) {
+			// Use modern clipboard API
+			navigator.clipboard.writeText(text);
+		} else {
+			// Fallback for older browsers
+			const textArea = document.createElement("textarea");
+			textArea.value = text;
+			textArea.style.position = "fixed";
+			textArea.style.left = "-999999px";
+			textArea.style.top = "-999999px";
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+			document.execCommand("copy");
+			textArea.remove();
+		}
 	}
 
 	createDataRow(id, data) {
@@ -136,7 +435,13 @@ class JsonDataEditor {
 		const isEditing = this.editingDataId === id;
 
 		row.innerHTML = `
-            <td>${id}</td>
+            <td>
+                ${
+					isEditing
+						? `<input type="text" value="${id}" data-field="id" class="form-input">`
+						: `<span>${id}</span>`
+				}
+            </td>
             <td>
                 ${
 					isEditing
@@ -174,7 +479,9 @@ class JsonDataEditor {
 	}
 
 	addDataRow() {
-		const newId = "new_" + Date.now();
+		// Generate a more user-friendly ID
+		const timestamp = Date.now();
+		const newId = `entry_${timestamp}`;
 		this.jsonData.data[newId] = { key: "", value: "" };
 		this.editingDataId = newId;
 		this.renderDataTable();
@@ -187,25 +494,46 @@ class JsonDataEditor {
 
 	saveDataRow(id) {
 		const row = document.querySelector(`tr[data-id="${id}"]`);
+		const idInput = row.querySelector('[data-field="id"]');
 		const keyInput = row.querySelector('[data-field="key"]');
 		const valueInput = row.querySelector('[data-field="value"]');
 
+		const newId = idInput.value.trim();
 		const key = keyInput.value.trim();
 		const value = valueInput.value.trim();
 
-		if (key && value) {
-			this.jsonData.data[id] = { key, value };
+		if (newId && key && value) {
+			// Check if ID is being changed and if new ID already exists
+			if (newId !== id && this.jsonData.data[newId]) {
+				this.showToast(
+					"ID already exists. Please choose a different ID.",
+					"error"
+				);
+				return;
+			}
+
+			// If ID is being changed, we need to update the data structure
+			if (newId !== id) {
+				// Store the data with new ID
+				this.jsonData.data[newId] = { key, value };
+				// Remove the old ID
+				delete this.jsonData.data[id];
+			} else {
+				// Just update the existing entry
+				this.jsonData.data[id] = { key, value };
+			}
+
 			this.editingDataId = null;
 			this.renderDataTable();
 			this.processConversations();
 			this.showToast("Data saved successfully", "success");
 		} else {
-			this.showToast("Please fill in both key and value", "error");
+			this.showToast("Please fill in ID, key, and value", "error");
 		}
 	}
 
 	cancelDataEdit(id) {
-		if (id.startsWith("new_")) {
+		if (id.startsWith("entry_")) {
 			delete this.jsonData.data[id];
 		}
 		this.editingDataId = null;
@@ -478,12 +806,28 @@ class JsonDataEditor {
 		}
 	}
 
+	showMainContent() {
+		const mainContent = document.getElementById("mainContent");
+		const downloadBtn = document.getElementById("downloadBtn");
+
+		// Show the main content with animation
+		mainContent.style.display = "block";
+		setTimeout(() => {
+			mainContent.classList.add("show");
+			// Setup merge field generator after content is visible
+			this.setupMergeFieldGenerator();
+		}, 10);
+
+		// Show the download button
+		downloadBtn.style.display = "inline-flex";
+	}
+
 	showLoadingSpinner() {
-		document.getElementById("loadingSpinner").style.display = "flex";
+		document.getElementById("loadingSpinner").classList.add("show");
 	}
 
 	hideLoadingSpinner() {
-		document.getElementById("loadingSpinner").style.display = "none";
+		document.getElementById("loadingSpinner").classList.remove("show");
 	}
 
 	showToast(message, type = "info") {
@@ -510,6 +854,15 @@ class JsonDataEditor {
 
 		toastContainer.appendChild(toast);
 
+		// Log to console for debugging
+		if (type === "error") {
+			console.error(`[JSON Data Editor] ${message}`);
+		} else if (type === "warning") {
+			console.warn(`[JSON Data Editor] ${message}`);
+		} else {
+			console.log(`[JSON Data Editor] ${message}`);
+		}
+
 		// Auto remove after 5 seconds
 		setTimeout(() => {
 			if (toast.parentElement) {
@@ -522,6 +875,10 @@ class JsonDataEditor {
 		this.renderDataTable();
 		this.renderConversations();
 		this.processConversations();
+		// Only setup merge field generator if main content is visible
+		if (document.getElementById("mainContent").style.display !== "none") {
+			this.setupMergeFieldGenerator();
+		}
 	}
 }
 

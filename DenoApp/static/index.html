@@ -30,26 +30,25 @@
 							style="display: none"
 						/>
 					</div>
-					<button id="downloadBtn" class="btn btn-primary">
+					<button id="downloadBtn" class="btn btn-primary" style="display: none;">
 						<i class="fas fa-download"></i> Download JSON
 					</button>
 				</div>
 
-				<div class="tabs">
-					<button id="dataTab" class="tab-btn active">
-						<i class="fas fa-database"></i> Data
-					</button>
-					<button id="conversationsTab" class="tab-btn">
-						<i class="fas fa-comments"></i> Conversations
-					</button>
+
+				<div id="mainContent" class="main-content" style="display: none;">
+					<div class="tabs">
+						<button id="dataTab" class="tab-btn active">
+							<i class="fas fa-database"></i> Data
+						</button>
+						<button id="conversationsTab" class="tab-btn">
+							<i class="fas fa-comments"></i> Conversations
+						</button>
+					</div>
 				</div>
 			</div>
 
-			<div
-				id="loadingSpinner"
-				class="loading-spinner"
-				style="display: none"
-			>
+			<div id="loadingSpinner" class="loading-spinner">
 				<div class="spinner"></div>
 				<p>Processing conversations...</p>
 			</div>
@@ -61,6 +60,7 @@
 						<i class="fas fa-plus"></i> Add New Entry
 					</button>
 				</div>
+
 				<div id="dataTable" class="table-container">
 					<table id="dataTableContent" class="data-table">
 						<thead>
@@ -87,9 +87,17 @@
 			<div id="conversationsSection" class="tab-content">
 				<div class="section-header">
 					<h2><i class="fas fa-comments"></i> Conversations</h2>
-					<button id="addConversationBtn" class="btn btn-success">
-						<i class="fas fa-plus"></i> Add New Conversation
-					</button>
+					<div class="header-actions">
+						<button
+							id="openMergeFieldModalBtn2"
+							class="btn btn-info"
+						>
+							<i class="fas fa-magic"></i> Generate Merge Field
+						</button>
+						<button id="addConversationBtn" class="btn btn-success">
+							<i class="fas fa-plus"></i> Add New Conversation
+						</button>
+					</div>
 				</div>
 				<div id="conversationsContainer">
 					<!-- Conversations will be populated here -->
@@ -102,9 +110,66 @@
 					</p>
 				</div>
 			</div>
+		</div>
 
 			<div class="toast-container" id="toastContainer">
 				<!-- Toast notifications will appear here -->
+			</div>
+		</div>
+
+		<!-- Merge Field Generator Modal -->
+		<div id="mergeFieldModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3><i class="fas fa-magic"></i> Generate Merge Field</h3>
+					<button id="closeMergeFieldModal" class="modal-close">
+						<i class="fas fa-times"></i>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="modalDataPointSelect">Data Point:</label>
+						<select id="modalDataPointSelect" class="form-control">
+							<option value="">Select a data point...</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="modalMergeTypeSelect">Merge Type:</label>
+						<select id="modalMergeTypeSelect" class="form-control">
+							<option value="">Select type...</option>
+							<option value="key">Key</option>
+							<option value="value">Value</option>
+							<option value="pair">Pair</option>
+						</select>
+					</div>
+					<div class="merge-field-preview">
+						<label>Generated Merge Field:</label>
+						<div
+							id="modalMergeFieldOutput"
+							class="merge-field-display"
+						>
+							Select data point and type to generate merge field
+						</div>
+						<div
+							id="modalMergeFieldValue"
+							class="merge-field-value"
+						>
+							<!-- Preview of actual value will appear here -->
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button id="modalCancelBtn" class="btn btn-secondary">
+						<i class="fas fa-times"></i> Cancel
+					</button>
+					<button
+						id="modalCopyMergeFieldBtn"
+						class="btn btn-primary"
+						disabled
+					>
+						<i class="fas fa-copy"></i> Copy Merge Field
+					</button>
+				</div>
 			</div>
 		</div>
 
