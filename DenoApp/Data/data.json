@@ -1,51 +1,90 @@
 {
 	"data": {
-		"PatrickGo": {
-			"key": "Patrick Go",
-			"value": "003Nu00000FHNFjIAP"
-		},
-		"YourMainLab": {
-			"key": "Your Main Lab",
-			"value": "001Nu00000F9fL4IAJ"
-		},
-		"Task": {
-			"key": "Task",
-			"value": "00TNq00000E9c63MAB"
-		},
-		"ClaireDufur": {
-			"key": "Claire Dufur",
-			"value": "0031T00004UOefRQAT"
-		},
-		"SanfordHealth": {
-			"key": "Sanford Health",
-			"value": "0013800001PW36AAAT"
-		},
-		"Webcast": {
-			"key": "Webcast",
-			"value": "00UNq000008fBqvMAE"
-		}
+		"Patrick Go": "003Nu00000FHNFjIAP",
+		"Your Main Lab": "001Nu00000F9fL4IAJ",
+		"Task": "00TNq00000E9c63MAB",
+		"Claire Dufur": "0031T00004UOefRQAT",
+		"Sanford Health": "0013800001PW36AAAT",
+		"Webcast": "00UNq000008fBqvMAE"
 	},
-	"conversations": [
-		[
-			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
+	"conversations": {
+		"Find Patrick Go": [
+			"Find {!data.Patrick Go.key} from {!data.Your Main Lab.key} account",
+			"{!data.Patrick Go.pair} is associated with {!data.Your Main Lab.pair}"
 		],
-
-		[
-			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
-			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}"
+		"Find Claire Dufur": [
+			"Find {!data.Claire Dufur.key} from {!data.Sanford Health.key} account",
+			"{!data.Claire Dufur.pair} is associated with {!data.Sanford Health.pair}"
 		],
-		[
-			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+		"Create Webcast": [
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.Claire Dufur.key} at {!data.Sanford Health.key}",
 			"{!data.Webcast.pair}"
 		],
-		[
-			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}",
-			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
-			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}",
-			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+		"Long Conversation": [
+			"Find {!data.Patrick Go.key} from {!data.Your Main Lab.key} account",
+			"{!data.Patrick Go.pair} is associated with {!data.Your Main Lab.pair}",
+			"Find {!data.Claire Dufur.key} from {!data.Sanford Health.key} account",
+			"{!data.Claire Dufur.pair} is associated with {!data.Sanford Health.pair}",
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.Claire Dufur.key} at {!data.Sanford Health.key}",
 			"{!data.Webcast.pair}"
 		]
-	]
+	},
+	"processedConversations": {
+		"Find Patrick Go": [
+			{
+				"role": "user",
+				"message": "Find Patrick Go from Your Main Lab account"
+			},
+			{
+				"role": "agent",
+				"message": "[Patrick Go]=[003Nu00000FHNFjIAP] is associated with [Your Main Lab]=[001Nu00000F9fL4IAJ]"
+			}
+		],
+		"Find Claire Dufur": [
+			{
+				"role": "user",
+				"message": "Find Claire Dufur from Sanford Health account"
+			},
+			{
+				"role": "agent",
+				"message": "[Claire Dufur]=[0031T00004UOefRQAT] is associated with [Sanford Health]=[0013800001PW36AAAT]"
+			}
+		],
+		"Create Webcast": [
+			{
+				"role": "user",
+				"message": "Create a Webcast meeting from 2pm tomorrow for an hour with Claire Dufur at Sanford Health"
+			},
+			{
+				"role": "agent",
+				"message": "[Webcast]=[00UNq000008fBqvMAE]"
+			}
+		],
+		"Long Conversation": [
+			{
+				"role": "user",
+				"message": "Find Patrick Go from Your Main Lab account"
+			},
+			{
+				"role": "agent",
+				"message": "[Patrick Go]=[003Nu00000FHNFjIAP] is associated with [Your Main Lab]=[001Nu00000F9fL4IAJ]"
+			},
+			{
+				"role": "user",
+				"message": "Find Claire Dufur from Sanford Health account"
+			},
+			{
+				"role": "agent",
+				"message": "[Claire Dufur]=[0031T00004UOefRQAT] is associated with [Sanford Health]=[0013800001PW36AAAT]"
+			},
+			{
+				"role": "user",
+				"message": "Create a Webcast meeting from 2pm tomorrow for an hour with Claire Dufur at Sanford Health"
+			},
+			{
+				"role": "agent",
+				"message": "[Webcast]=[00UNq000008fBqvMAE]"
+			}
+		]
+	}
 }

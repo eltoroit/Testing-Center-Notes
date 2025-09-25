@@ -2,14 +2,14 @@ class JsonDataEditor {
 	constructor() {
 		this.jsonData = {
 			data: {},
-			conversations: []
+			conversations: {}
 		};
-		this.processedConversations = [];
+		this.processedConversations = {};
 		this.isLoading = false;
 		this.showDataTable = true;
 		this.showConversationsTable = true;
 		this.editingDataId = null;
-		this.editingConversationIndex = null;
+		this.editingConversationKey = null;
 		this.editingMessageIndex = null;
 
 		this.initializeEventListeners();
@@ -82,7 +82,7 @@ class JsonDataEditor {
 			// Check if there's existing data and ask for confirmation
 			const hasExistingData =
 				Object.keys(this.jsonData.data).length > 0 ||
-				this.jsonData.conversations.length > 0;
+				Object.keys(this.jsonData.conversations).length > 0;
 
 			if (hasExistingData) {
 				const confirmed = confirm(
@@ -103,6 +103,10 @@ class JsonDataEditor {
 					if (uploadedData.processedConversations) {
 						delete uploadedData.processedConversations;
 					}
+
+					// Keep conversations in object format to preserve keys
+					// No conversion needed - we'll work with the object format directly
+
 					this.jsonData = uploadedData;
 					this.showMainContent();
 					this.renderDataTable();
@@ -128,6 +132,7 @@ class JsonDataEditor {
 	}
 
 	handleDownload() {
+		// Use the same keys for both conversations and processedConversations
 		const dataToDownload = {
 			...this.jsonData,
 			processedConversations: this.processedConversations
@@ -178,9 +183,9 @@ class JsonDataEditor {
 		noDataMessage.style.display = "none";
 		tbody.innerHTML = "";
 
-		dataEntries.forEach((id) => {
-			const data = this.jsonData.data[id];
-			const row = this.createDataRow(id, data);
+		dataEntries.forEach((key) => {
+			const value = this.jsonData.data[key];
+			const row = this.createDataRow(key, value);
 			tbody.appendChild(row);
 		});
 
@@ -194,6 +199,11 @@ class JsonDataEditor {
 
 	updateDataPointSelect() {
 		const dataPointSelect = document.getElementById("dataPointSelect");
+
+		if (!dataPointSelect) {
+			return;
+		}
+
 		const dataEntries = Object.keys(this.jsonData.data);
 
 		// Clear existing options except the first one
@@ -209,11 +219,11 @@ class JsonDataEditor {
 			return;
 		}
 
-		dataEntries.forEach((id) => {
-			const data = this.jsonData.data[id];
+		dataEntries.forEach((key) => {
+			const value = this.jsonData.data[key];
 			const option = document.createElement("option");
-			option.value = id;
-			option.textContent = `${data.key} (${id})`;
+			option.value = key;
+			option.textContent = `${key} (${value})`;
 			dataPointSelect.appendChild(option);
 		});
 	}
@@ -223,14 +233,22 @@ class JsonDataEditor {
 		const mergeTypeSelect = document.getElementById("mergeTypeSelect");
 		const copyBtn = document.getElementById("copyMergeFieldBtn");
 
-		// Add event listeners
-		dataPointSelect.addEventListener("change", () =>
-			this.updateMergeFieldPreview()
-		);
-		mergeTypeSelect.addEventListener("change", () =>
-			this.updateMergeFieldPreview()
-		);
-		copyBtn.addEventListener("click", () => this.copyGeneratedMergeField());
+		// Only add event listeners if elements exist
+		if (dataPointSelect) {
+			dataPointSelect.addEventListener("change", () =>
+				this.updateMergeFieldPreview()
+			);
+		}
+		if (mergeTypeSelect) {
+			mergeTypeSelect.addEventListener("change", () =>
+				this.updateMergeFieldPreview()
+			);
+		}
+		if (copyBtn) {
+			copyBtn.addEventListener("click", () =>
+				this.copyGeneratedMergeField()
+			);
+		}
 	}
 
 	updateMergeFieldPreview() {
@@ -239,6 +257,17 @@ class JsonDataEditor {
 		const mergeFieldOutput = document.getElementById("mergeFieldOutput");
 		const mergeFieldValue = document.getElementById("mergeFieldValue");
 		const copyBtn = document.getElementById("copyMergeFieldBtn");
+
+		// Return early if elements don't exist
+		if (
+			!dataPointSelect ||
+			!mergeTypeSelect ||
+			!mergeFieldOutput ||
+			!mergeFieldValue ||
+			!copyBtn
+		) {
+			return;
+		}
 
 		const selectedDataPoint = dataPointSelect.value;
 		const selectedType = mergeTypeSelect.value;
@@ -256,18 +285,18 @@ class JsonDataEditor {
 		mergeFieldOutput.textContent = mergeField;
 
 		// Show the actual value that will be resolved
-		const data = this.jsonData.data[selectedDataPoint];
+		const value = this.jsonData.data[selectedDataPoint];
 		let resolvedValue = "";
 
 		switch (selectedType) {
 			case "key":
-				resolvedValue = data.key;
+				resolvedValue = selectedDataPoint;
 				break;
 			case "value":
-				resolvedValue = data.value;
+				resolvedValue = value;
 				break;
 			case "pair":
-				resolvedValue = `[${data.key}]=[${data.value}]`;
+				resolvedValue = `[${selectedDataPoint}]=[${value}]`;
 				break;
 		}
 
@@ -277,6 +306,11 @@ class JsonDataEditor {
 
 	copyGeneratedMergeField() {
 		const mergeFieldOutput = document.getElementById("mergeFieldOutput");
+
+		if (!mergeFieldOutput) {
+			return;
+		}
+
 		const mergeField = mergeFieldOutput.textContent;
 
 		if (
@@ -332,11 +366,11 @@ class JsonDataEditor {
 			return;
 		}
 
-		dataEntries.forEach((id) => {
-			const data = this.jsonData.data[id];
+		dataEntries.forEach((key) => {
+			const value = this.jsonData.data[key];
 			const option = document.createElement("option");
-			option.value = id;
-			option.textContent = `${data.key} (${id})`;
+			option.value = key;
+			option.textContent = `${key} (${value})`;
 			dataPointSelect.appendChild(option);
 		});
 	}
@@ -395,18 +429,18 @@ class JsonDataEditor {
 		mergeFieldOutput.textContent = mergeField;
 
 		// Show the actual value that will be resolved
-		const data = this.jsonData.data[selectedDataPoint];
+		const value = this.jsonData.data[selectedDataPoint];
 		let resolvedValue = "";
 
 		switch (selectedType) {
 			case "key":
-				resolvedValue = data.key;
+				resolvedValue = selectedDataPoint;
 				break;
 			case "value":
-				resolvedValue = data.value;
+				resolvedValue = value;
 				break;
 			case "pair":
-				resolvedValue = `[${data.key}]=[${data.value}]`;
+				resolvedValue = `[${selectedDataPoint}]=[${value}]`;
 				break;
 		}
 
@@ -430,14 +464,14 @@ class JsonDataEditor {
 		}
 	}
 
-	copyConversationOutput(conversationIndex) {
+	copyConversationOutput(conversationKey) {
 		const processedConversation =
-			this.processedConversations[conversationIndex] || [];
+			this.processedConversations[conversationKey] || [];
 		const outputJson = JSON.stringify(processedConversation, null, 2);
 
 		this.copyToClipboard(outputJson);
 		this.showToast(
-			`Copied conversation ${conversationIndex + 1} JSON output`,
+			`Copied conversation "${conversationKey}" JSON output`,
 			"success"
 		);
 	}
@@ -461,47 +495,40 @@ class JsonDataEditor {
 		}
 	}
 
-	createDataRow(id, data) {
+	createDataRow(key, value) {
 		const row = document.createElement("tr");
-		row.dataset.id = id;
+		row.dataset.key = key;
 
-		const isEditing = this.editingDataId === id;
+		const isEditing = this.editingDataId === key;
 
 		row.innerHTML = `
             <td>
                 ${
 					isEditing
-						? `<input type="text" value="${id}" data-field="id" class="form-input">`
-						: `<span>${id}</span>`
+						? `<input type="text" value="${key}" data-field="key" class="form-input">`
+						: `<span>${key}</span>`
 				}
             </td>
             <td>
                 ${
 					isEditing
-						? `<input type="text" value="${data.key}" data-field="key" class="form-input">`
-						: `<span>${data.key}</span>`
+						? `<input type="text" value="${value}" data-field="value" class="form-input">`
+						: `<span>${value}</span>`
 				}
             </td>
             <td>
                 ${
 					isEditing
-						? `<input type="text" value="${data.value}" data-field="value" class="form-input">`
-						: `<span>${data.value}</span>`
-				}
-            </td>
-            <td>
-                ${
-					isEditing
-						? `<button class="btn btn-sm btn-success" onclick="app.saveDataRow('${id}')">
+						? `<button class="btn btn-sm btn-success" onclick="app.saveDataRow('${key}')">
                         <i class="fas fa-check"></i> Save
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="app.cancelDataEdit('${id}')">
+                    <button class="btn btn-sm btn-secondary" onclick="app.cancelDataEdit('${key}')">
                         <i class="fas fa-times"></i> Cancel
                     </button>`
-						: `<button class="btn btn-sm btn-primary" onclick="app.editDataRow('${id}')">
+						: `<button class="btn btn-sm btn-primary" onclick="app.editDataRow('${key}')">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteDataRow('${id}')">
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteDataRow('${key}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>`
 				}
@@ -512,48 +539,46 @@ class JsonDataEditor {
 	}
 
 	addDataRow() {
-		// Generate a more user-friendly ID
+		// Generate a more user-friendly key
 		const timestamp = Date.now();
-		const newId = `entry_${timestamp}`;
-		this.jsonData.data[newId] = { key: "", value: "" };
-		this.editingDataId = newId;
+		const newKey = `New Entry ${timestamp}`;
+		this.jsonData.data[newKey] = "";
+		this.editingDataId = newKey;
 		this.renderDataTable();
 	}
 
-	editDataRow(id) {
-		this.editingDataId = id;
+	editDataRow(key) {
+		this.editingDataId = key;
 		this.renderDataTable();
 	}
 
-	saveDataRow(id) {
-		const row = document.querySelector(`tr[data-id="${id}"]`);
-		const idInput = row.querySelector('[data-field="id"]');
+	saveDataRow(oldKey) {
+		const row = document.querySelector(`tr[data-key="${oldKey}"]`);
 		const keyInput = row.querySelector('[data-field="key"]');
 		const valueInput = row.querySelector('[data-field="value"]');
 
-		const newId = idInput.value.trim();
-		const key = keyInput.value.trim();
+		const newKey = keyInput.value.trim();
 		const value = valueInput.value.trim();
 
-		if (newId && key && value) {
-			// Check if ID is being changed and if new ID already exists
-			if (newId !== id && this.jsonData.data[newId]) {
+		if (newKey && value) {
+			// Check if key is being changed and if new key already exists
+			if (newKey !== oldKey && this.jsonData.data[newKey]) {
 				this.showToast(
-					"ID already exists. Please choose a different ID.",
+					"Key already exists. Please choose a different key.",
 					"error"
 				);
 				return;
 			}
 
-			// If ID is being changed, we need to update the data structure
-			if (newId !== id) {
-				// Store the data with new ID
-				this.jsonData.data[newId] = { key, value };
-				// Remove the old ID
-				delete this.jsonData.data[id];
+			// If key is being changed, we need to update the data structure
+			if (newKey !== oldKey) {
+				// Store the data with new key
+				this.jsonData.data[newKey] = value;
+				// Remove the old key
+				delete this.jsonData.data[oldKey];
 			} else {
 				// Just update the existing entry
-				this.jsonData.data[id] = { key, value };
+				this.jsonData.data[oldKey] = value;
 			}
 
 			this.editingDataId = null;
@@ -561,21 +586,21 @@ class JsonDataEditor {
 			this.processConversations();
 			this.showToast("Data saved successfully", "success");
 		} else {
-			this.showToast("Please fill in ID, key, and value", "error");
+			this.showToast("Please fill in key and value", "error");
 		}
 	}
 
-	cancelDataEdit(id) {
-		if (id.startsWith("entry_")) {
-			delete this.jsonData.data[id];
+	cancelDataEdit(key) {
+		if (key.startsWith("New Entry ")) {
+			delete this.jsonData.data[key];
 		}
 		this.editingDataId = null;
 		this.renderDataTable();
 	}
 
-	deleteDataRow(id) {
+	deleteDataRow(key) {
 		if (confirm("Are you sure you want to delete this data entry?")) {
-			delete this.jsonData.data[id];
+			delete this.jsonData.data[key];
 			this.renderDataTable();
 			this.processConversations();
 			this.showToast("Data entry deleted", "success");
@@ -589,7 +614,8 @@ class JsonDataEditor {
 			"noConversationsMessage"
 		);
 
-		if (this.jsonData.conversations.length === 0) {
+		const conversationKeys = Object.keys(this.jsonData.conversations);
+		if (conversationKeys.length === 0) {
 			container.innerHTML = "";
 			noConversationsMessage.style.display = "block";
 			return;
@@ -598,34 +624,62 @@ class JsonDataEditor {
 		noConversationsMessage.style.display = "none";
 		container.innerHTML = "";
 
-		this.jsonData.conversations.forEach((conversation, index) => {
+		conversationKeys.forEach((conversationKey) => {
+			const conversation = this.jsonData.conversations[conversationKey];
 			const conversationElement = this.createConversationElement(
-				index,
+				conversationKey,
 				conversation
 			);
 			container.appendChild(conversationElement);
 		});
 	}
 
-	createConversationElement(index, conversation) {
+	createConversationElement(conversationKey, conversation) {
 		const div = document.createElement("div");
 		div.className = "conversation-group";
-		div.dataset.index = index;
+		div.dataset.key = conversationKey;
 
-		const processedConversation = this.processedConversations[index] || [];
+		const processedConversation =
+			this.processedConversations[conversationKey] || [];
 		const outputJson = JSON.stringify(processedConversation, null, 2);
+		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+			processedConversation
+		);
+		const outputClass = hasUnresolvedFields
+			? "conversation-json-error"
+			: "conversation-json";
+
+		const isEditingTitle = this.editingConversationKey === conversationKey;
 
 		div.innerHTML = `
             <div class="conversation-header">
-                <h3>Conversation ${index + 1}</h3>
+                <div class="conversation-title">
+                    ${
+						isEditingTitle
+							? `<input type="text" value="${conversationKey}" class="conversation-title-input" data-conversation-key="${conversationKey}">`
+							: `<h3 class="conversation-title-display" data-conversation-key="${conversationKey}">${conversationKey}</h3>`
+					}
+                    ${
+						isEditingTitle
+							? `<button class="btn btn-sm btn-success" onclick="app.saveConversationTitle('${conversationKey}')">
+                            <i class="fas fa-check"></i> Save
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="app.cancelConversationTitleEdit('${conversationKey}')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>`
+							: `<button class="btn btn-sm btn-primary" onclick="app.editConversationTitle('${conversationKey}')">
+                            <i class="fas fa-edit"></i> Edit Title
+                        </button>`
+					}
+                </div>
                 <div class="conversation-actions">
-                    <button class="btn btn-sm btn-success" onclick="app.addMessage(${index})">
+                    <button class="btn btn-sm btn-success" onclick="app.addMessage('${conversationKey}')">
                         <i class="fas fa-plus"></i> Add Message
                     </button>
-                    <button class="btn btn-sm btn-primary" onclick="app.cloneConversation(${index})">
+                    <button class="btn btn-sm btn-primary" onclick="app.cloneConversation('${conversationKey}')">
                         <i class="fas fa-copy"></i> Clone
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteConversation(${index})">
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteConversation('${conversationKey}')">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
@@ -638,7 +692,7 @@ class JsonDataEditor {
                         ${conversation
 							.map((message, messageIndex) =>
 								this.createMessageInput(
-									index,
+									conversationKey,
 									messageIndex,
 									message
 								)
@@ -648,12 +702,18 @@ class JsonDataEditor {
                 </div>
                 <div class="conversation-output">
                     <div class="output-header">
-                        <h4>Output (JSON)</h4>
-                        <button class="btn btn-sm btn-info" onclick="app.copyConversationOutput(${index})">
+                        <h4>Output (JSON) ${
+							hasUnresolvedFields
+								? '<span class="error-indicator" title="Contains unresolved merge fields"><i class="fas fa-exclamation-triangle"></i></span>'
+								: ""
+						}</h4>
+                        <button class="btn btn-sm btn-info" onclick="app.copyConversationOutput('${conversationKey}')">
                             <i class="fas fa-copy"></i> Copy JSON
                         </button>
                     </div>
-                    <div class="conversation-json">${outputJson}</div>
+                    <div class="${outputClass}" title="${
+			hasUnresolvedFields ? "Contains unresolved merge fields" : ""
+		}">${outputJson}</div>
                 </div>
             </div>
         `;
@@ -662,29 +722,47 @@ class JsonDataEditor {
 		const messageTextareas = div.querySelectorAll(".message-textarea");
 		messageTextareas.forEach((textarea, messageIndex) => {
 			textarea.addEventListener("input", (e) => {
-				this.handleMessageChange(index, messageIndex, e.target.value);
+				this.handleMessageChange(
+					conversationKey,
+					messageIndex,
+					e.target.value
+				);
 			});
+
+			// Validate the current content
+			this.validateAndUpdateMessageInput(
+				conversationKey,
+				messageIndex,
+				textarea.value
+			);
 		});
 
 		return div;
 	}
 
-	createMessageInput(conversationIndex, messageIndex, message) {
+	createMessageInput(conversationKey, messageIndex, message) {
 		const role = this.getRoleForMessage(messageIndex);
+		const hasErrors = this.validateMergeFields(message);
+		const errorClass = hasErrors ? "message-textarea-error" : "";
+		const errorTooltip = hasErrors
+			? 'title="Invalid merge field detected. Check that data keys match exactly (including spaces)."'
+			: "";
+
 		return `
-            <div class="message-input-row" data-conversation-index="${conversationIndex}" data-message-index="${messageIndex}">
+            <div class="message-input-row" data-conversation-key="${conversationKey}" data-message-index="${messageIndex}">
                 <div class="message-label">
                     <span class="role-badge role-${role}">${role}</span>
                 </div>
                 <div class="message-input">
                     <textarea 
-                        class="message-textarea" 
+                        class="message-textarea ${errorClass}" 
                         rows="2"
                         placeholder="Enter ${role} message..."
+                        ${errorTooltip}
                     >${message}</textarea>
                 </div>
                 <div class="message-actions">
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteMessage(${conversationIndex}, ${messageIndex})">
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteMessage('${conversationKey}', ${messageIndex})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -692,29 +770,89 @@ class JsonDataEditor {
         `;
 	}
 
+	// Conversation title editing methods
+	editConversationTitle(conversationKey) {
+		this.editingConversationKey = conversationKey;
+		this.renderConversations();
+	}
+
+	saveConversationTitle(oldKey) {
+		const input = document.querySelector(
+			`input[data-conversation-key="${oldKey}"]`
+		);
+		const newKey = input.value.trim();
+
+		if (!newKey) {
+			this.showToast("Conversation title cannot be empty", "error");
+			return;
+		}
+
+		if (newKey !== oldKey) {
+			// Check if new key already exists
+			if (this.jsonData.conversations[newKey]) {
+				this.showToast(
+					"Conversation title already exists. Please choose a different title.",
+					"error"
+				);
+				return;
+			}
+
+			// Update the conversation key
+			const conversation = this.jsonData.conversations[oldKey];
+			const processedConversation = this.processedConversations[oldKey];
+
+			// Remove old entries
+			delete this.jsonData.conversations[oldKey];
+			if (processedConversation) {
+				delete this.processedConversations[oldKey];
+			}
+
+			// Add with new key
+			this.jsonData.conversations[newKey] = conversation;
+			if (processedConversation) {
+				this.processedConversations[newKey] = processedConversation;
+			}
+		}
+
+		this.editingConversationKey = null;
+		this.renderConversations();
+		this.showToast("Conversation title updated successfully", "success");
+	}
+
+	cancelConversationTitleEdit(conversationKey) {
+		this.editingConversationKey = null;
+		this.renderConversations();
+	}
+
 	addConversation() {
-		this.jsonData.conversations.push([]);
+		const timestamp = Date.now();
+		const newKey = `New Conversation ${timestamp}`;
+		this.jsonData.conversations[newKey] = [];
 		this.renderConversations();
 		this.processConversations();
 	}
 
-	cloneConversation(index) {
-		const originalConversation = [...this.jsonData.conversations[index]];
-		this.jsonData.conversations.push(originalConversation);
+	cloneConversation(conversationKey) {
+		const originalConversation = [
+			...this.jsonData.conversations[conversationKey]
+		];
+		const timestamp = Date.now();
+		const newKey = `${conversationKey} (Copy ${timestamp})`;
+		this.jsonData.conversations[newKey] = originalConversation;
 		this.renderConversations();
 		this.processConversations();
 		this.showToast("Conversation cloned successfully", "success");
 	}
 
-	addMessage(conversationIndex) {
-		this.jsonData.conversations[conversationIndex].push("");
+	addMessage(conversationKey) {
+		this.jsonData.conversations[conversationKey].push("");
 		this.renderConversations();
 		this.processConversations();
 	}
 
-	deleteMessage(conversationIndex, messageIndex) {
+	deleteMessage(conversationKey, messageIndex) {
 		if (confirm("Are you sure you want to delete this message?")) {
-			this.jsonData.conversations[conversationIndex].splice(
+			this.jsonData.conversations[conversationKey].splice(
 				messageIndex,
 				1
 			);
@@ -724,14 +862,82 @@ class JsonDataEditor {
 		}
 	}
 
-	handleMessageChange(conversationIndex, messageIndex, value) {
-		this.jsonData.conversations[conversationIndex][messageIndex] = value;
+	handleMessageChange(conversationKey, messageIndex, value) {
+		this.jsonData.conversations[conversationKey][messageIndex] = value;
 		this.processConversations();
+		this.validateAndUpdateMessageInput(
+			conversationKey,
+			messageIndex,
+			value
+		);
 	}
 
-	deleteConversation(index) {
+	validateMergeFields(message) {
+		if (!message || !this.jsonData.data) {
+			return false;
+		}
+
+		// Find all merge field patterns: {!data.KeyName.field}
+		const mergeFieldPattern = /\{!data\.([^}]+)\}/g;
+		let match;
+		const availableKeys = Object.keys(this.jsonData.data);
+
+		while ((match = mergeFieldPattern.exec(message)) !== null) {
+			const fieldPath = match[1]; // e.g., "ClaireDufur.pair"
+			const parts = fieldPath.split(".");
+
+			if (parts.length === 2) {
+				const keyName = parts[0];
+				const fieldName = parts[1];
+
+				// Check if the key exists in our data
+				if (!availableKeys.includes(keyName)) {
+					return true; // Found an invalid merge field
+				}
+			}
+		}
+
+		return false; // No errors found
+	}
+
+	validateAndUpdateMessageInput(conversationKey, messageIndex, value) {
+		const textarea = document.querySelector(
+			`[data-conversation-key="${conversationKey}"][data-message-index="${messageIndex}"] .message-textarea`
+		);
+
+		if (textarea) {
+			const hasErrors = this.validateMergeFields(value);
+			if (hasErrors) {
+				textarea.classList.add("message-textarea-error");
+				textarea.title =
+					"Invalid merge field detected. Check that data keys match exactly (including spaces).";
+			} else {
+				textarea.classList.remove("message-textarea-error");
+				textarea.title = "";
+			}
+		}
+	}
+
+	hasUnresolvedMergeFields(processedConversation) {
+		if (!processedConversation || !Array.isArray(processedConversation)) {
+			return false;
+		}
+
+		// Check if any message contains unresolved merge fields (still in {!data...} format)
+		return processedConversation.some((message) => {
+			if (message && message.message) {
+				// Look for any remaining merge field patterns
+				const mergeFieldPattern = /\{!data\.[^}]+\}/;
+				return mergeFieldPattern.test(message.message);
+			}
+			return false;
+		});
+	}
+
+	deleteConversation(conversationKey) {
 		if (confirm("Are you sure you want to delete this conversation?")) {
-			this.jsonData.conversations.splice(index, 1);
+			delete this.jsonData.conversations[conversationKey];
+			delete this.processedConversations[conversationKey];
 			this.renderConversations();
 			this.processConversations();
 			this.showToast("Conversation deleted", "success");
@@ -749,26 +955,31 @@ class JsonDataEditor {
 
 		// Simulate processing delay for better UX
 		setTimeout(() => {
-			this.processedConversations = [];
+			this.processedConversations = {};
 
-			this.jsonData.conversations.forEach((conversation) => {
-				const processedConversation = [];
+			Object.keys(this.jsonData.conversations).forEach(
+				(conversationKey) => {
+					const conversation =
+						this.jsonData.conversations[conversationKey];
+					const processedConversation = [];
 
-				conversation.forEach((message, index) => {
-					const role = index % 2 === 0 ? "user" : "agent";
-					const processedMessage = this.processMergeFields(
-						message,
-						this.jsonData.data
-					);
+					conversation.forEach((message, index) => {
+						const role = index % 2 === 0 ? "user" : "agent";
+						const processedMessage = this.processMergeFields(
+							message,
+							this.jsonData.data
+						);
 
-					processedConversation.push({
-						role: role,
-						message: processedMessage
+						processedConversation.push({
+							role: role,
+							message: processedMessage
+						});
 					});
-				});
 
-				this.processedConversations.push(processedConversation);
-			});
+					this.processedConversations[conversationKey] =
+						processedConversation;
+				}
+			);
 
 			this.hideLoadingSpinner();
 			this.updateConversationOutputs();
@@ -778,16 +989,40 @@ class JsonDataEditor {
 
 	updateConversationOutputs() {
 		// Update the JSON output for each conversation without re-rendering the entire UI
-		this.jsonData.conversations.forEach((conversation, index) => {
+		Object.keys(this.jsonData.conversations).forEach((conversationKey) => {
 			const processedConversation =
-				this.processedConversations[index] || [];
+				this.processedConversations[conversationKey] || [];
 			const outputJson = JSON.stringify(processedConversation, null, 2);
+			const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+				processedConversation
+			);
 
 			const outputElement = document.querySelector(
-				`[data-index="${index}"] .conversation-json`
+				`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
 			);
 			if (outputElement) {
 				outputElement.textContent = outputJson;
+
+				// Update the class and tooltip based on unresolved fields
+				if (hasUnresolvedFields) {
+					outputElement.className = "conversation-json-error";
+					outputElement.title = "Contains unresolved merge fields";
+				} else {
+					outputElement.className = "conversation-json";
+					outputElement.title = "";
+				}
+			}
+
+			// Update the error indicator in the header
+			const headerElement = document.querySelector(
+				`[data-key="${conversationKey}"] .output-header h4`
+			);
+			if (headerElement) {
+				if (hasUnresolvedFields) {
+					headerElement.innerHTML = `Output (JSON) <span class="error-indicator" title="Contains unresolved merge fields"><i class="fas fa-exclamation-triangle"></i></span>`;
+				} else {
+					headerElement.innerHTML = "Output (JSON)";
+				}
 			}
 		});
 	}
@@ -828,14 +1063,14 @@ class JsonDataEditor {
 				return `{!data.${fieldPath}}`; // Return original if key not found
 			}
 
-			const keyData = data[keyName];
+			const value = data[keyName];
 
 			if (fieldName === "key") {
-				return keyData.key;
+				return keyName;
 			} else if (fieldName === "value") {
-				return keyData.value;
+				return value;
 			} else if (fieldName === "pair") {
-				return `[${keyData.key}]=[${keyData.value}]`;
+				return `[${keyName}]=[${value}]`;
 			} else {
 				return `{!data.${fieldPath}}`; // Return original if field not recognized
 			}
