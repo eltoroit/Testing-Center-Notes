@@ -1,0 +1,166 @@
+.data-table-container {
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.conversations-container {
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.conversation-group {
+	border: 1px solid #e5e5e5;
+	border-radius: 8px;
+	padding: 1rem;
+	background: #fafafa;
+	margin-bottom: 1rem;
+}
+
+.message-row {
+	border: 1px solid #e5e5e5;
+	border-radius: 4px;
+	padding: 0.5rem;
+	background: white;
+}
+
+.message-content {
+	background: #f8f9fa;
+	border-radius: 4px;
+	border-left: 4px solid #0070d2;
+}
+
+.processed-message {
+	border-radius: 4px;
+}
+
+.processed-message .slds-border {
+	background: #f0f8ff;
+	border-color: #0070d2;
+}
+
+.user-message {
+	border-left-color: #0070d2;
+	background: #e6f3ff;
+}
+
+.agent-message {
+	border-left-color: #4bca81;
+	background: #e8f5e8;
+}
+
+.input-messages {
+	background: white;
+	border-radius: 4px;
+	padding: 1rem;
+	border: 1px solid #e5e5e5;
+}
+
+.processed-messages {
+	background: #f8f9fa;
+	border-radius: 4px;
+	padding: 1rem;
+	border: 1px solid #e5e5e5;
+}
+
+.slds-table th {
+	background: #f3f3f3;
+	font-weight: 600;
+}
+
+.slds-table tbody tr:hover {
+	background: #f8f9fa;
+}
+
+/* Custom button styling */
+.slds-button_brand {
+	background: #0070d2;
+	border-color: #0070d2;
+}
+
+.slds-button_brand:hover {
+	background: #005fb2;
+	border-color: #005fb2;
+}
+
+.slds-button_destructive {
+	background: #c23934;
+	border-color: #c23934;
+}
+
+.slds-button_destructive:hover {
+	background: #a32924;
+	border-color: #a32924;
+}
+
+/* File upload styling */
+.slds-file-selector {
+	border: 2px dashed #d8dde6;
+	border-radius: 8px;
+	padding: 1rem;
+	text-align: center;
+	background: #f8f9fa;
+}
+
+.slds-file-selector:hover {
+	border-color: #0070d2;
+	background: #e6f3ff;
+}
+
+/* Loading spinner */
+.slds-spinner_container {
+	background: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.slds-grid {
+		flex-direction: column;
+	}
+
+	.slds-col {
+		width: 100%;
+		margin-bottom: 0.5rem;
+	}
+
+	.conversation-group {
+		padding: 0.5rem;
+	}
+
+	.message-row {
+		padding: 0.25rem;
+	}
+}
+
+/* Animation for smooth transitions */
+.conversation-group {
+	transition: all 0.3s ease;
+}
+
+.message-row {
+	transition: all 0.2s ease;
+}
+
+.slds-button {
+	transition: all 0.2s ease;
+}
+
+/* Custom scrollbar for tables */
+.slds-scrollable_x::-webkit-scrollbar {
+	height: 8px;
+}
+
+.slds-scrollable_x::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 4px;
+}
+
+.slds-scrollable_x::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+}
+
+.slds-scrollable_x::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}

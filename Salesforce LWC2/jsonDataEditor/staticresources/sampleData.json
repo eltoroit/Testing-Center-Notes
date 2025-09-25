@@ -1,0 +1,50 @@
+{
+	"data": {
+		"PatrickGo": {
+			"key": "Patrick Go",
+			"value": "003Nu00000FHNFjIAP"
+		},
+		"YourMainLab": {
+			"key": "Your Main Lab",
+			"value": "001Nu00000F9fL4IAJ"
+		},
+		"Task": {
+			"key": "Task",
+			"value": "00TNq00000E9c63MAB"
+		},
+		"ClaireDufur": {
+			"key": "Claire Dufur",
+			"value": "0031T00004UOefRQAT"
+		},
+		"SanfordHealth": {
+			"key": "Sanford Health",
+			"value": "0013800001PW36AAAT"
+		},
+		"Webcast": {
+			"key": "Webcast",
+			"value": "00UNq000008fBqvMAE"
+		}
+	},
+	"conversations": [
+		[
+			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
+			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
+		],
+		[
+			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
+			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}"
+		],
+		[
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+			"{!data.Webcast.pair}"
+		],
+		[
+			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
+			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}",
+			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
+			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}",
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+			"{!data.Webcast.pair}"
+		]
+	]
+}

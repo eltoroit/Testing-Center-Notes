@@ -1,0 +1,258 @@
+.conversations-container {
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	padding: 1rem;
+}
+
+.conversation-group {
+	border: 1px solid #e5e5e5;
+	border-radius: 8px;
+	padding: 1.5rem;
+	background: #fafafa;
+	margin-bottom: 1.5rem;
+	transition: all 0.3s ease;
+}
+
+.conversation-group:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.conversation-group h3 {
+	color: #0070d2;
+	margin-bottom: 1rem;
+	font-weight: 600;
+}
+
+.message-row {
+	border: 1px solid #e5e5e5;
+	border-radius: 6px;
+	padding: 1rem;
+	background: white;
+	margin-bottom: 0.75rem;
+	transition: all 0.2s ease;
+}
+
+.message-row:hover {
+	border-color: #0070d2;
+	box-shadow: 0 2px 4px rgba(0, 112, 210, 0.1);
+}
+
+.message-content {
+	background: #f8f9fa;
+	border-radius: 6px;
+	border-left: 4px solid #0070d2;
+	padding: 0.75rem;
+	font-family: 'Salesforce Sans', Arial, sans-serif;
+	line-height: 1.5;
+}
+
+.message-content strong {
+	color: #0070d2;
+	font-weight: 600;
+}
+
+.processed-message {
+	border-radius: 6px;
+	margin-bottom: 0.75rem;
+}
+
+.processed-message .slds-border {
+	background: #f0f8ff;
+	border-color: #0070d2;
+	border-radius: 6px;
+	padding: 1rem;
+}
+
+.processed-message strong {
+	color: #0070d2;
+	font-weight: 600;
+	text-transform: capitalize;
+}
+
+.user-message {
+	border-left-color: #0070d2;
+	background: #e6f3ff;
+}
+
+.agent-message {
+	border-left-color: #4bca81;
+	background: #e8f5e8;
+}
+
+.input-messages {
+	background: white;
+	border-radius: 6px;
+	padding: 1.5rem;
+	border: 1px solid #e5e5e5;
+	margin-bottom: 1rem;
+}
+
+.input-messages h4 {
+	color: #3e3e3c;
+	font-weight: 600;
+	margin-bottom: 1rem;
+	border-bottom: 2px solid #0070d2;
+	padding-bottom: 0.5rem;
+}
+
+.processed-messages {
+	background: #f8f9fa;
+	border-radius: 6px;
+	padding: 1.5rem;
+	border: 1px solid #e5e5e5;
+}
+
+.processed-messages h4 {
+	color: #3e3e3c;
+	font-weight: 600;
+	margin-bottom: 1rem;
+	border-bottom: 2px solid #4bca81;
+	padding-bottom: 0.5rem;
+}
+
+/* Button styling */
+.slds-button-group {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.slds-button-group .slds-button {
+	margin: 0;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+}
+
+.slds-button_brand {
+	background: #0070d2;
+	border-color: #0070d2;
+}
+
+.slds-button_brand:hover {
+	background: #005fb2;
+	border-color: #005fb2;
+	transform: translateY(-1px);
+}
+
+.slds-button_neutral {
+	background: white;
+	border: 1px solid #d8dde6;
+	color: #3e3e3c;
+}
+
+.slds-button_neutral:hover {
+	background: #f8f9fa;
+	border-color: #0070d2;
+	color: #0070d2;
+	transform: translateY(-1px);
+}
+
+.slds-button_destructive {
+	background: #c23934;
+	border-color: #c23934;
+}
+
+.slds-button_destructive:hover {
+	background: #a32924;
+	border-color: #a32924;
+	transform: translateY(-1px);
+}
+
+/* Textarea styling */
+.slds-textarea {
+	border-radius: 6px;
+	border: 1px solid #d8dde6;
+	transition: border-color 0.2s ease;
+	font-family: 'Salesforce Sans', Arial, sans-serif;
+	line-height: 1.5;
+}
+
+.slds-textarea:focus {
+	border-color: #0070d2;
+	box-shadow: 0 0 0 2px rgba(0, 112, 210, 0.2);
+}
+
+/* Empty state styling */
+.slds-text-color_weak {
+	color: #706e6b;
+	font-style: italic;
+	text-align: center;
+	padding: 2rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.conversation-group {
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.message-row {
+		padding: 0.75rem;
+	}
+
+	.input-messages,
+	.processed-messages {
+		padding: 1rem;
+	}
+
+	.slds-button-group {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.slds-button-group .slds-button {
+		width: 100%;
+	}
+
+	.slds-grid_align-spread {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.slds-col.slds-no-flex {
+		width: 100%;
+	}
+}
+
+/* Animation for new messages */
+.message-row {
+	animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+/* Custom scrollbar for long conversations */
+.conversations-container {
+	max-height: 80vh;
+	overflow-y: auto;
+}
+
+.conversations-container::-webkit-scrollbar {
+	width: 8px;
+}
+
+.conversations-container::-webkit-scrollbar-track {
+	background: #f1f1f1;
+	border-radius: 4px;
+}
+
+.conversations-container::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+}
+
+.conversations-container::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}

@@ -1,0 +1,213 @@
+<template>
+	<div class="conversations-container">
+		<div class="slds-grid slds-grid_align-end slds-m-bottom_medium">
+			<div class="slds-col">
+				<lightning-button
+					label="Add New Conversation"
+					variant="brand"
+					onclick={handleAddConversation}
+					icon-name="utility:add"
+				>
+				</lightning-button>
+			</div>
+		</div>
+
+		<template if:true={hasConversations}>
+			<template for:each={conversationRows} for:item="conversationRow">
+				<div
+					key={conversationRow.index}
+					class="conversation-group slds-m-bottom_large"
+				>
+					<div
+						class="slds-grid slds-grid_align-spread slds-m-bottom_small"
+					>
+						<h3 class="slds-text-heading_small">
+							Conversation {conversationRow.index}
+						</h3>
+						<lightning-button-group>
+							<lightning-button
+								variant="brand"
+								size="small"
+								label="Add Message"
+								data-index={conversationRow.index}
+								onclick={handleAddMessage}
+								icon-name="utility:add"
+							>
+							</lightning-button>
+							<lightning-button
+								variant="destructive"
+								size="small"
+								label="Delete Conversation"
+								data-index={conversationRow.index}
+								onclick={handleDeleteConversation}
+								icon-name="utility:delete"
+							>
+							</lightning-button>
+						</lightning-button-group>
+					</div>
+
+					<!-- Input Messages (Editable) -->
+					<div class="input-messages slds-m-bottom_medium">
+						<h4
+							class="slds-text-heading_x-small slds-m-bottom_small"
+						>
+							Input Messages (Editable)
+						</h4>
+						<template
+							for:each={conversationRow.messages}
+							for:item="messageObj"
+							for:index="messageIndex"
+						>
+							<div
+								key={messageIndex}
+								class="message-row slds-m-bottom_small"
+							>
+								<div class="slds-grid slds-grid_align-spread">
+									<div class="slds-col slds-grow">
+										<template
+											if:true={messageObj.isEditing}
+										>
+											<lightning-textarea
+												value={messageObj.text}
+												data-conversation-index={conversationRow.index}
+												data-message-index={messageIndex}
+												onchange={handleMessageChange}
+												rows="2"
+												class="slds-m-bottom_none"
+											>
+											</lightning-textarea>
+										</template>
+										<template
+											if:false={messageObj.isEditing}
+										>
+											<div
+												class="message-content slds-p-around_small slds-border_bottom"
+											>
+												<strong
+													>{messageObj.role}</strong
+												>: {messageObj.text}
+											</div>
+										</template>
+									</div>
+									<div
+										class="slds-col slds-no-flex slds-m-left_small"
+									>
+										<template
+											if:true={messageObj.isEditing}
+										>
+											<lightning-button-group>
+												<lightning-button
+													variant="brand"
+													size="small"
+													label="Save"
+													data-conversation-index={conversationRow.index}
+													data-message-index={messageIndex}
+													onclick={handleSaveMessage}
+													icon-name="utility:check"
+												>
+												</lightning-button>
+												<lightning-button
+													variant="neutral"
+													size="small"
+													label="Cancel"
+													data-conversation-index={conversationRow.index}
+													data-message-index={messageIndex}
+													onclick={handleCancelEdit}
+													icon-name="utility:close"
+												>
+												</lightning-button>
+											</lightning-button-group>
+										</template>
+										<template
+											if:false={messageObj.isEditing}
+										>
+											<lightning-button-group>
+												<lightning-button
+													variant="neutral"
+													size="small"
+													label="Edit"
+													data-conversation-index={conversationRow.index}
+													data-message-index={messageIndex}
+													onclick={handleEditMessage}
+													icon-name="utility:edit"
+												>
+												</lightning-button>
+												<lightning-button
+													variant="destructive"
+													size="small"
+													label="Delete"
+													data-conversation-index={conversationRow.index}
+													data-message-index={messageIndex}
+													onclick={handleDeleteMessage}
+													icon-name="utility:delete"
+												>
+												</lightning-button>
+											</lightning-button-group>
+										</template>
+									</div>
+								</div>
+							</div>
+						</template>
+					</div>
+
+					<!-- Processed Messages (Read-only) -->
+					<div class="processed-messages">
+						<h4
+							class="slds-text-heading_x-small slds-m-bottom_small"
+						>
+							Processed Output (Read-only)
+						</h4>
+						<template if:true={conversationRow.processedMessages}>
+							<template
+								for:each={conversationRow.processedMessages}
+								for:item="processedMessage"
+								for:index="processedIndex"
+							>
+								<div
+									key={processedIndex}
+									class="processed-message slds-m-bottom_small"
+								>
+									<div
+										class="slds-p-around_small slds-border slds-border_radius"
+									>
+										<div
+											class="slds-grid slds-grid_align-spread"
+										>
+											<div class="slds-col slds-grow">
+												<strong
+													class="slds-text-body_small"
+													>{processedMessage.role}:</strong
+												>
+												<div class="slds-m-top_x-small">
+													{processedMessage.message}
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</template>
+						</template>
+						<template if:false={conversationRow.processedMessages}>
+							<div
+								class="slds-text-align_center slds-p-vertical_medium"
+							>
+								<p class="slds-text-color_weak">
+									No processed messages available
+								</p>
+							</div>
+						</template>
+					</div>
+				</div>
+			</template>
+		</template>
+
+		<template if:false={hasConversations}>
+			<div class="slds-text-align_center slds-p-vertical_large">
+				<p class="slds-text-color_weak">
+					No conversations found. Click "Add New Conversation" to get
+					started.
+				</p>
+			</div>
+		</template>
+	</div>
+</template>

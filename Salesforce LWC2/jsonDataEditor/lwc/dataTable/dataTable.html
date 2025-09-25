@@ -1,0 +1,124 @@
+<template>
+    <div class="data-table-container">
+        <div class="slds-grid slds-grid_align-end slds-m-bottom_medium">
+            <div class="slds-col">
+                <lightning-button
+                    label="Add New Entry"
+                    variant="brand"
+                    onclick={handleAddRow}
+                    icon-name="utility:add">
+                </lightning-button>
+            </div>
+        </div>
+
+        <template if:true={hasData}>
+            <div class="slds-scrollable_x">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="ID">ID</div>
+                            </th>
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Key">Key</div>
+                            </th>
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Value">Value</div>
+                            </th>
+                            <th class="slds-text-title_caps" scope="col">
+                                <div class="slds-truncate" title="Actions">Actions</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={editedData} for:item="item">
+                            <tr key={item.id} class="slds-hint-parent">
+                                <td data-label="ID">
+                                    <div class="slds-truncate" title={item.id}>{item.id}</div>
+                                </td>
+                                <td data-label="Key">
+                                    <template if:true={item.isEditing}>
+                                        <lightning-input
+                                            type="text"
+                                            value={item.key}
+                                            data-id={item.id}
+                                            data-field="key"
+                                            onchange={handleKeyChange}
+                                            class="slds-m-bottom_none">
+                                        </lightning-input>
+                                    </template>
+                                    <template if:false={item.isEditing}>
+                                        <div class="slds-truncate" title={item.key}>{item.key}</div>
+                                    </template>
+                                </td>
+                                <td data-label="Value">
+                                    <template if:true={item.isEditing}>
+                                        <lightning-input
+                                            type="text"
+                                            value={item.value}
+                                            data-id={item.id}
+                                            data-field="value"
+                                            onchange={handleValueChange}
+                                            class="slds-m-bottom_none">
+                                        </lightning-input>
+                                    </template>
+                                    <template if:false={item.isEditing}>
+                                        <div class="slds-truncate" title={item.value}>{item.value}</div>
+                                    </template>
+                                </td>
+                                <td data-label="Actions">
+                                    <template if:true={item.isEditing}>
+                                        <lightning-button-group>
+                                            <lightning-button
+                                                variant="brand"
+                                                size="small"
+                                                label="Save"
+                                                data-id={item.id}
+                                                onclick={handleSave}
+                                                icon-name="utility:check">
+                                            </lightning-button>
+                                            <lightning-button
+                                                variant="neutral"
+                                                size="small"
+                                                label="Cancel"
+                                                data-id={item.id}
+                                                onclick={handleCancel}
+                                                icon-name="utility:close">
+                                            </lightning-button>
+                                        </lightning-button-group>
+                                    </template>
+                                    <template if:false={item.isEditing}>
+                                        <lightning-button-group>
+                                            <lightning-button
+                                                variant="neutral"
+                                                size="small"
+                                                label="Edit"
+                                                data-id={item.id}
+                                                onclick={handleEdit}
+                                                icon-name="utility:edit">
+                                            </lightning-button>
+                                            <lightning-button
+                                                variant="destructive"
+                                                size="small"
+                                                label="Delete"
+                                                data-id={item.id}
+                                                onclick={handleDeleteRow}
+                                                icon-name="utility:delete">
+                                            </lightning-button>
+                                        </lightning-button-group>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template if:false={hasData}>
+            <div class="slds-text-align_center slds-p-vertical_large">
+                <p class="slds-text-color_weak">No data entries found. Click "Add New Entry" to get started.</p>
+            </div>
+        </template>
+    </div>
+</template>
