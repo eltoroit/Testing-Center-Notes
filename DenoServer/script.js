@@ -678,8 +678,14 @@ function generateCsvData() {
 		const expectedActions = JSON.stringify(test.expectedActions || []);
 
 		const contextVars = test.contextVariables || {};
-		const currentObjectApiName = transformText(contextVars.currentObjectApiName || "", currentData.data);
-		const currentRecordId = transformText(contextVars.currentRecordId || "", currentData.data);
+		const currentObjectApiName = transformText(
+			contextVars.currentObjectApiName || "",
+			currentData.data
+		);
+		const currentRecordId = transformText(
+			contextVars.currentRecordId || "",
+			currentData.data
+		);
 
 		return [
 			conversationHistory,
