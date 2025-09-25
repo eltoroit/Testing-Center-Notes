@@ -107,6 +107,31 @@ export default class JsonTestDataEditor extends LightningElement {
 		}
 	}
 
+	// Tab navigation computed properties
+	get dataTabIndex() {
+		return this.activeTab === "data" ? "0" : "-1";
+	}
+
+	get dataTabSelected() {
+		return this.activeTab === "data";
+	}
+
+	get contextTabIndex() {
+		return this.activeTab === "context" ? "0" : "-1";
+	}
+
+	get contextTabSelected() {
+		return this.activeTab === "context";
+	}
+
+	get testsTabIndex() {
+		return this.activeTab === "tests" ? "0" : "-1";
+	}
+
+	get testsTabSelected() {
+		return this.activeTab === "tests";
+	}
+
 	// File handling methods
 	handleFileUpload(event) {
 		const file = event.target.files[0];

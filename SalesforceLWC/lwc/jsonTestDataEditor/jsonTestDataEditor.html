@@ -1,523 +1,856 @@
 <template>
-    <lightning-card title="JSON Test Data Editor" icon-name="custom:custom63">
-        <div class="slds-p-around_medium">
-            <!-- Header -->
-            <div class="slds-text-align_center slds-m-bottom_large">
-                <h1 class="slds-text-heading_large slds-m-bottom_small">JSON Test Data Editor</h1>
-                <p class="slds-text-body_regular slds-text-color_weak">
-                    Upload and edit your test data JSON files, then export to CSV or download edited JSON
-                </p>
-            </div>
+	<lightning-card title="JSON Test Data Editor" icon-name="custom:custom63">
+		<div class="slds-p-around_medium">
+			<!-- Header -->
+			<div class="slds-text-align_center slds-m-bottom_large">
+				<h1 class="slds-text-heading_large slds-m-bottom_small">
+					JSON Test Data Editor
+				</h1>
+				<p class="slds-text-body_regular slds-text-color_weak">
+					Upload and edit your test data JSON files, then export to
+					CSV or download edited JSON
+				</p>
+			</div>
 
-            <!-- Error Messages -->
-            <template if:true={hasErrors}>
-                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium">
-                    <span class="slds-assistive-text">Error</span>
-                    <ul class="slds-list_dotted">
-                        <template for:each={validationErrors} for:item="error">
-                            <li key={error} class="slds-item">{error}</li>
-                        </template>
-                    </ul>
-                </div>
-            </template>
+			<!-- Error Messages -->
+			<template lwc:if="{hasErrors}">
+				<div
+					class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium"
+				>
+					<span class="slds-assistive-text">Error</span>
+					<ul class="slds-list_dotted">
+						<template
+							for:each="{validationErrors}"
+							for:item="error"
+						>
+							<li key="{error}" class="slds-item">{error}</li>
+						</template>
+					</ul>
+				</div>
+			</template>
 
-            <!-- File Upload Section -->
-            <div class="slds-card slds-m-bottom_medium">
-                <div class="slds-card__header">
-                    <h2 class="slds-card__header-title">
-                        <span class="slds-text-heading_small">Upload JSON File</span>
-                    </h2>
-                </div>
-                <div class="slds-card__body slds-card__body_inner">
-                    <div class="slds-form-element">
-                        <label class="slds-form-element__label" for="file-input">
-                            <abbr class="slds-required" title="required">*</abbr>JSON File
-                        </label>
-                        <div class="slds-form-element__control">
-                            <input type="file" 
-                                   id="file-input" 
-                                   class="slds-input" 
-                                   accept=".json"
-                                   onchange={handleFileUpload}
-                                   disabled={isLoading} />
-                        </div>
-                    </div>
-                    
-                    <!-- File Info -->
-                    <template if:true={hasFile}>
-                        <div class="slds-m-top_small">
-                            <div class="slds-box slds-theme_shade">
-                                <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
-                                    <div>
-                                        <span class="slds-icon_container slds-icon-utility-file">
-                                            <lightning-icon icon-name="utility:file" size="x-small"></lightning-icon>
-                                        </span>
-                                        <span class="slds-m-left_x-small">{originalFileName}</span>
-                                    </div>
-                                    <lightning-button 
-                                        label="Clear" 
-                                        variant="destructive" 
-                                        size="small"
-                                        onclick={handleFileCleared}
-                                        disabled={isLoading}>
-                                    </lightning-button>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
+			<!-- File Upload Section -->
+			<div class="slds-card slds-m-bottom_medium">
+				<div class="slds-card__header">
+					<h2 class="slds-card__header-title">
+						<span class="slds-text-heading_small"
+							>Upload JSON File</span
+						>
+					</h2>
+				</div>
+				<div class="slds-card__body slds-card__body_inner">
+					<div class="slds-form-element">
+						<label
+							class="slds-form-element__label"
+							for="file-input"
+						>
+							<abbr class="slds-required" title="required">*</abbr
+							>JSON File
+						</label>
+						<div class="slds-form-element__control">
+							<input
+								type="file"
+								id="file-input"
+								class="slds-input"
+								accept=".json"
+								onchange="{handleFileUpload}"
+								disabled="{isLoading}"
+							/>
+						</div>
+					</div>
 
-            <!-- Editor Section (shown when file is loaded) -->
-            <template if:true={showEditor}>
-                <div class="slds-card slds-m-bottom_medium">
-                    <div class="slds-card__header">
-                        <h2 class="slds-card__header-title">
-                            <span class="slds-text-heading_small">Edit Data</span>
-                        </h2>
-                    </div>
-                    <div class="slds-card__body slds-card__body_inner">
-                        <!-- Tabs -->
-                        <div class="slds-tabs_default">
-                            <ul class="slds-tabs_default__nav" role="tablist">
-                                <li class="slds-tabs_default__item" role="presentation">
-                                    <a class="slds-tabs_default__link" 
-                                       href="#" 
-                                       role="tab" 
-                                       tabindex={activeTab === 'data' ? '0' : '-1'}
-                                       aria-selected={activeTab === 'data'}
-                                       aria-controls="data-tab"
-                                       onclick={handleTabClick}
-                                       data-tab="data">
-                                        Data
-                                    </a>
-                                </li>
-                                <li class="slds-tabs_default__item" role="presentation">
-                                    <a class="slds-tabs_default__link" 
-                                       href="#" 
-                                       role="tab" 
-                                       tabindex={activeTab === 'context' ? '0' : '-1'}
-                                       aria-selected={activeTab === 'context'}
-                                       aria-controls="context-tab"
-                                       onclick={handleTabClick}
-                                       data-tab="context">
-                                        Context Variables
-                                    </a>
-                                </li>
-                                <li class="slds-tabs_default__item" role="presentation">
-                                    <a class="slds-tabs_default__link" 
-                                       href="#" 
-                                       role="tab" 
-                                       tabindex={activeTab === 'tests' ? '0' : '-1'}
-                                       aria-selected={activeTab === 'tests'}
-                                       aria-controls="tests-tab"
-                                       onclick={handleTabClick}
-                                       data-tab="tests">
-                                        Tests
-                                    </a>
-                                </li>
-                            </ul>
+					<!-- File Info -->
+					<template lwc:if="{hasFile}">
+						<div class="slds-m-top_small">
+							<div class="slds-box slds-theme_shade">
+								<div
+									class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center"
+								>
+									<div>
+										<span
+											class="slds-icon_container slds-icon-utility-file"
+										>
+											<lightning-icon
+												icon-name="utility:file"
+												size="x-small"
+											></lightning-icon>
+										</span>
+										<span class="slds-m-left_x-small"
+											>{originalFileName}</span
+										>
+									</div>
+									<lightning-button
+										label="Clear"
+										variant="destructive"
+										size="small"
+										onclick="{handleFileCleared}"
+										disabled="{isLoading}"
+									>
+									</lightning-button>
+								</div>
+							</div>
+						</div>
+					</template>
+				</div>
+			</div>
 
-                            <!-- Tab Content -->
-                            <div class="slds-tabs_default__content">
-                                <!-- Data Tab -->
-                                <div if:true={showDataTab} 
-                                     id="data-tab" 
-                                     class="slds-tabs_default__panel" 
-                                     role="tabpanel" 
-                                     aria-labelledby="data-tab">
-                                    <div class="slds-section slds-is-open">
-                                        <div class="slds-section__title">
-                                            <h3 class="slds-section__title-text">Data Section</h3>
-                                            <lightning-button 
-                                                label="Add Item" 
-                                                variant="brand" 
-                                                size="small"
-                                                onclick={addDataItem}
-                                                disabled={isLoading}>
-                                            </lightning-button>
-                                        </div>
-                                        <div class="slds-section__content">
-                                            <template if:true={hasDataItems}>
-                                                <template for:each={dataItems} for:item="item" for:index="index">
-                                                    <div key={item.key} class="slds-box slds-m-bottom_small">
-                                                        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
-                                                            <h4 class="slds-text-heading_small">Data Item {index}</h4>
-                                                            <lightning-button 
-                                                                label="Delete" 
-                                                                variant="destructive" 
-                                                                size="small"
-                                                                onclick={deleteDataItem}
-                                                                data-index={index}
-                                                                disabled={isLoading}>
-                                                            </lightning-button>
-                                                        </div>
-                                                        <div class="slds-form slds-form_horizontal">
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="key-{index}">Key</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="key-{index}"
-                                                                           class="slds-input" 
-                                                                           value={item.key}
-                                                                           onchange={updateDataItem}
-                                                                           data-index={index}
-                                                                           data-field="key"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="display-key-{index}">Display Key</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="display-key-{index}"
-                                                                           class="slds-input" 
-                                                                           value={item.value.key}
-                                                                           onchange={updateDataItem}
-                                                                           data-index={index}
-                                                                           data-field="displayKey"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="value-{index}">Value</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="value-{index}"
-                                                                           class="slds-input" 
-                                                                           value={item.value.value}
-                                                                           onchange={updateDataItem}
-                                                                           data-index={index}
-                                                                           data-field="value"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <template if:false={hasDataItems}>
-                                                <div class="slds-text-align_center slds-p-around_large">
-                                                    <p class="slds-text-color_weak">No data items found. Click "Add Item" to create one.</p>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
+			<!-- Editor Section (shown when file is loaded) -->
+			<template lwc:if="{showEditor}">
+				<div class="slds-card slds-m-bottom_medium">
+					<div class="slds-card__header">
+						<h2 class="slds-card__header-title">
+							<span class="slds-text-heading_small"
+								>Edit Data</span
+							>
+						</h2>
+					</div>
+					<div class="slds-card__body slds-card__body_inner">
+						<!-- Tabs -->
+						<div class="slds-tabs_default">
+							<ul class="slds-tabs_default__nav" role="tablist">
+								<li
+									class="slds-tabs_default__item"
+									role="presentation"
+								>
+									<a
+										class="slds-tabs_default__link"
+										href="#"
+										role="tab"
+										tabindex="{dataTabIndex}"
+										aria-selected="{dataTabSelected}"
+										aria-controls="data-tab"
+										onclick="{handleTabClick}"
+										data-tab="data"
+									>
+										Data
+									</a>
+								</li>
+								<li
+									class="slds-tabs_default__item"
+									role="presentation"
+								>
+									<a
+										class="slds-tabs_default__link"
+										href="#"
+										role="tab"
+										tabindex="{contextTabIndex}"
+										aria-selected="{contextTabSelected}"
+										aria-controls="context-tab"
+										onclick="{handleTabClick}"
+										data-tab="context"
+									>
+										Context Variables
+									</a>
+								</li>
+								<li
+									class="slds-tabs_default__item"
+									role="presentation"
+								>
+									<a
+										class="slds-tabs_default__link"
+										href="#"
+										role="tab"
+										tabindex="{testsTabIndex}"
+										aria-selected="{testsTabSelected}"
+										aria-controls="tests-tab"
+										onclick="{handleTabClick}"
+										data-tab="tests"
+									>
+										Tests
+									</a>
+								</li>
+							</ul>
 
-                                <!-- Context Variables Tab -->
-                                <div if:true={showContextTab} 
-                                     id="context-tab" 
-                                     class="slds-tabs_default__panel" 
-                                     role="tabpanel" 
-                                     aria-labelledby="context-tab">
-                                    <div class="slds-section slds-is-open">
-                                        <div class="slds-section__title">
-                                            <h3 class="slds-section__title-text">Context Variables</h3>
-                                            <lightning-button 
-                                                label="Add Variable" 
-                                                variant="brand" 
-                                                size="small"
-                                                onclick={addContextItem}
-                                                disabled={isLoading}>
-                                            </lightning-button>
-                                        </div>
-                                        <div class="slds-section__content">
-                                            <template if:true={hasContextItems}>
-                                                <template for:each={contextItems} for:item="item" for:index="index">
-                                                    <div key={item.key} class="slds-box slds-m-bottom_small">
-                                                        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
-                                                            <h4 class="slds-text-heading_small">Context Variable {index}</h4>
-                                                            <lightning-button 
-                                                                label="Delete" 
-                                                                variant="destructive" 
-                                                                size="small"
-                                                                onclick={deleteContextItem}
-                                                                data-index={index}
-                                                                disabled={isLoading}>
-                                                            </lightning-button>
-                                                        </div>
-                                                        <div class="slds-form slds-form_horizontal">
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="context-key-{index}">Variable Name</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="context-key-{index}"
-                                                                           class="slds-input" 
-                                                                           value={item.key}
-                                                                           onchange={updateContextItem}
-                                                                           data-index={index}
-                                                                           data-field="key"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="context-value-{index}">Description</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="context-value-{index}"
-                                                                           class="slds-input" 
-                                                                           value={item.value}
-                                                                           onchange={updateContextItem}
-                                                                           data-index={index}
-                                                                           data-field="value"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <template if:false={hasContextItems}>
-                                                <div class="slds-text-align_center slds-p-around_large">
-                                                    <p class="slds-text-color_weak">No context variables found. Click "Add Variable" to create one.</p>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
+							<!-- Tab Content -->
+							<div class="slds-tabs_default__content">
+								<!-- Data Tab -->
+								<div
+									lwc:if="{showDataTab}"
+									id="data-tab"
+									class="slds-tabs_default__panel"
+									role="tabpanel"
+									aria-labelledby="data-tab"
+								>
+									<div class="slds-section slds-is-open">
+										<div class="slds-section__title">
+											<h3
+												class="slds-section__title-text"
+											>
+												Data Section
+											</h3>
+											<lightning-button
+												label="Add Item"
+												variant="brand"
+												size="small"
+												onclick="{addDataItem}"
+												disabled="{isLoading}"
+											>
+											</lightning-button>
+										</div>
+										<div class="slds-section__content">
+											<template lwc:if="{hasDataItems}">
+												<template
+													for:each="{dataItems}"
+													for:item="item"
+													for:index="index"
+												>
+													<div
+														key="{item.key}"
+														class="slds-box slds-m-bottom_small"
+													>
+														<div
+															class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+														>
+															<h4
+																class="slds-text-heading_small"
+															>
+																Data Item
+																{index}
+															</h4>
+															<lightning-button
+																label="Delete"
+																variant="destructive"
+																size="small"
+																onclick="{deleteDataItem}"
+																data-index="{index}"
+																disabled="{isLoading}"
+															>
+															</lightning-button>
+														</div>
+														<div
+															class="slds-form slds-form_horizontal"
+														>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="key-{index}"
+																	>Key</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="key-{index}"
+																		class="slds-input"
+																		value="{item.key}"
+																		onchange="{updateDataItem}"
+																		data-index="{index}"
+																		data-field="key"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="display-key-{index}"
+																	>Display
+																	Key</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="display-key-{index}"
+																		class="slds-input"
+																		value="{item.value.key}"
+																		onchange="{updateDataItem}"
+																		data-index="{index}"
+																		data-field="displayKey"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="value-{index}"
+																	>Value</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="value-{index}"
+																		class="slds-input"
+																		value="{item.value.value}"
+																		onchange="{updateDataItem}"
+																		data-index="{index}"
+																		data-field="value"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+														</div>
+													</div>
+												</template>
+											</template>
+											<template lwc:else>
+												<div
+													class="slds-text-align_center slds-p-around_large"
+												>
+													<p
+														class="slds-text-color_weak"
+													>
+														No data items found.
+														Click "Add Item" to
+														create one.
+													</p>
+												</div>
+											</template>
+										</div>
+									</div>
+								</div>
 
-                                <!-- Tests Tab -->
-                                <div if:true={showTestsTab} 
-                                     id="tests-tab" 
-                                     class="slds-tabs_default__panel" 
-                                     role="tabpanel" 
-                                     aria-labelledby="tests-tab">
-                                    <div class="slds-section slds-is-open">
-                                        <div class="slds-section__title">
-                                            <h3 class="slds-section__title-text">Tests</h3>
-                                            <lightning-button 
-                                                label="Add Test" 
-                                                variant="brand" 
-                                                size="small"
-                                                onclick={addTest}
-                                                disabled={isLoading}>
-                                            </lightning-button>
-                                        </div>
-                                        <div class="slds-section__content">
-                                            <template if:true={hasTests}>
-                                                <template for:each={testItems} for:item="test" for:index="index">
-                                                    <div key={test.testNumber} class="slds-box slds-m-bottom_medium">
-                                                        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
-                                                            <h4 class="slds-text-heading_small">Test {test.testNumber}</h4>
-                                                            <lightning-button 
-                                                                label="Delete" 
-                                                                variant="destructive" 
-                                                                size="small"
-                                                                onclick={deleteTest}
-                                                                data-index={index}
-                                                                disabled={isLoading}>
-                                                            </lightning-button>
-                                                        </div>
-                                                        
-                                                        <!-- Test Form -->
-                                                        <div class="slds-form slds-form_horizontal">
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="test-number-{index}">Test Number</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="number" 
-                                                                           id="test-number-{index}"
-                                                                           class="slds-input" 
-                                                                           value={test.testNumber}
-                                                                           onchange={updateTest}
-                                                                           data-index={index}
-                                                                           data-field="testNumber"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="utterance-{index}">Utterance</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <textarea id="utterance-{index}"
-                                                                              class="slds-textarea" 
-                                                                              value={test.utterance}
-                                                                              onchange={updateTest}
-                                                                              data-index={index}
-                                                                              data-field="utterance"
-                                                                              disabled={isLoading}></textarea>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="expected-topic-{index}">Expected Topic</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <input type="text" 
-                                                                           id="expected-topic-{index}"
-                                                                           class="slds-input" 
-                                                                           value={test.expectedTopic}
-                                                                           onchange={updateTest}
-                                                                           data-index={index}
-                                                                           data-field="expectedTopic"
-                                                                           disabled={isLoading} />
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div class="slds-form-element">
-                                                                <label class="slds-form-element__label" for="expected-response-{index}">Expected Response</label>
-                                                                <div class="slds-form-element__control">
-                                                                    <textarea id="expected-response-{index}"
-                                                                              class="slds-textarea" 
-                                                                              value={test.expectedResponse}
-                                                                              onchange={updateTest}
-                                                                              data-index={index}
-                                                                              data-field="expectedResponse"
-                                                                              disabled={isLoading}></textarea>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <!-- Actions Section -->
-                                                        <div class="slds-m-top_medium">
-                                                            <div class="slds-section__title">
-                                                                <h5 class="slds-section__title-text">Expected Actions</h5>
-                                                                <lightning-button 
-                                                                    label="Add Action" 
-                                                                    variant="brand" 
-                                                                    size="small"
-                                                                    onclick={addAction}
-                                                                    data-index={index}
-                                                                    disabled={isLoading}>
-                                                                </lightning-button>
-                                                            </div>
-                                                            <div class="slds-section__content">
-                                                                <template if:true={test.hasActions}>
-                                                                    <template for:each={test.expectedActions} for:item="action" for:action-index="actionIndex">
-                                                                        <div key={actionIndex} class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
-                                                                            <div class="slds-form-element slds-grow">
-                                                                                <input type="text" 
-                                                                                       class="slds-input" 
-                                                                                       value={action}
-                                                                                       onchange={updateAction}
-                                                                                       data-test-index={index}
-                                                                                       data-action-index={actionIndex}
-                                                                                       disabled={isLoading} />
-                                                                            </div>
-                                                                            <lightning-button 
-                                                                                label="Delete" 
-                                                                                variant="destructive" 
-                                                                                size="small"
-                                                                                onclick={deleteAction}
-                                                                                data-test-index={index}
-                                                                                data-action-index={actionIndex}
-                                                                                disabled={isLoading}>
-                                                                            </lightning-button>
-                                                                        </div>
-                                                                    </template>
-                                                                </template>
-                                                                <template if:false={test.hasActions}>
-                                                                    <p class="slds-text-color_weak slds-text-align_center slds-p-around_small">No actions defined. Click "Add Action" to create one.</p>
-                                                                </template>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <!-- Context Variables Section -->
-                                                        <div class="slds-m-top_medium">
-                                                            <div class="slds-section__title">
-                                                                <h5 class="slds-section__title-text">Context Variables</h5>
-                                                                <lightning-button 
-                                                                    label="Add Context Variable" 
-                                                                    variant="brand" 
-                                                                    size="small"
-                                                                    onclick={addTestContextVar}
-                                                                    data-index={index}
-                                                                    disabled={isLoading}>
-                                                                </lightning-button>
-                                                            </div>
-                                                            <div class="slds-section__content">
-                                                                <template if:true={test.hasContextVars}>
-                                                                    <template for:each={test.contextVariableEntries} for:item="contextVar" for:context-index="contextIndex">
-                                                                        <div key={contextVar.key} class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small">
-                                                                            <div class="slds-form-element slds-grow">
-                                                                                <label class="slds-form-element__label">{contextVar.key}</label>
-                                                                                <div class="slds-form-element__control">
-                                                                                    <input type="text" 
-                                                                                           class="slds-input" 
-                                                                                           value={contextVar.value}
-                                                                                           onchange={updateTestContextVar}
-                                                                                           data-test-index={index}
-                                                                                           data-context-key={contextVar.key}
-                                                                                           disabled={isLoading} />
-                                                                                </div>
-                                                                            </div>
-                                                                            <lightning-button 
-                                                                                label="Delete" 
-                                                                                variant="destructive" 
-                                                                                size="small"
-                                                                                onclick={deleteTestContextVar}
-                                                                                data-test-index={index}
-                                                                                data-context-key={contextVar.key}
-                                                                                disabled={isLoading}>
-                                                                            </lightning-button>
-                                                                        </div>
-                                                                    </template>
-                                                                </template>
-                                                                <template if:false={test.hasContextVars}>
-                                                                    <p class="slds-text-color_weak slds-text-align_center slds-p-around_small">No context variables defined. Click "Add Context Variable" to create one.</p>
-                                                                </template>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <template if:false={hasTests}>
-                                                <div class="slds-text-align_center slds-p-around_large">
-                                                    <p class="slds-text-color_weak">No tests found. Click "Add Test" to create one.</p>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+								<!-- Context Variables Tab -->
+								<div
+									lwc:if="{showContextTab}"
+									id="context-tab"
+									class="slds-tabs_default__panel"
+									role="tabpanel"
+									aria-labelledby="context-tab"
+								>
+									<div class="slds-section slds-is-open">
+										<div class="slds-section__title">
+											<h3
+												class="slds-section__title-text"
+											>
+												Context Variables
+											</h3>
+											<lightning-button
+												label="Add Variable"
+												variant="brand"
+												size="small"
+												onclick="{addContextItem}"
+												disabled="{isLoading}"
+											>
+											</lightning-button>
+										</div>
+										<div class="slds-section__content">
+											<template
+												lwc:if="{hasContextItems}"
+											>
+												<template
+													for:each="{contextItems}"
+													for:item="item"
+													for:index="index"
+												>
+													<div
+														key="{item.key}"
+														class="slds-box slds-m-bottom_small"
+													>
+														<div
+															class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+														>
+															<h4
+																class="slds-text-heading_small"
+															>
+																Context Variable
+																{index}
+															</h4>
+															<lightning-button
+																label="Delete"
+																variant="destructive"
+																size="small"
+																onclick="{deleteContextItem}"
+																data-index="{index}"
+																disabled="{isLoading}"
+															>
+															</lightning-button>
+														</div>
+														<div
+															class="slds-form slds-form_horizontal"
+														>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="context-key-{index}"
+																	>Variable
+																	Name</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="context-key-{index}"
+																		class="slds-input"
+																		value="{item.key}"
+																		onchange="{updateContextItem}"
+																		data-index="{index}"
+																		data-field="key"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="context-value-{index}"
+																	>Description</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="context-value-{index}"
+																		class="slds-input"
+																		value="{item.value}"
+																		onchange="{updateContextItem}"
+																		data-index="{index}"
+																		data-field="value"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+														</div>
+													</div>
+												</template>
+											</template>
+											<template lwc:else>
+												<div
+													class="slds-text-align_center slds-p-around_large"
+												>
+													<p
+														class="slds-text-color_weak"
+													>
+														No context variables
+														found. Click "Add
+														Variable" to create one.
+													</p>
+												</div>
+											</template>
+										</div>
+									</div>
+								</div>
 
-                <!-- Export Section -->
-                <div class="slds-card slds-m-bottom_medium">
-                    <div class="slds-card__header">
-                        <h2 class="slds-card__header-title">
-                            <span class="slds-text-heading_small">Export Options</span>
-                        </h2>
-                    </div>
-                    <div class="slds-card__body slds-card__body_inner">
-                        <div class="slds-grid slds-grid_align-center slds-gutters">
-                            <div class="slds-col slds-size_1-of-2">
-                                <lightning-button 
-                                    label="Export CSV" 
-                                    variant="brand" 
-                                    icon-name="utility:download"
-                                    onclick={exportCsv}
-                                    disabled={isLoading}>
-                                </lightning-button>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2">
-                                <lightning-button 
-                                    label="Export JSON" 
-                                    variant="brand" 
-                                    icon-name="utility:download"
-                                    onclick={exportJson}
-                                    disabled={isLoading}>
-                                </lightning-button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+								<!-- Tests Tab -->
+								<div
+									lwc:if="{showTestsTab}"
+									id="tests-tab"
+									class="slds-tabs_default__panel"
+									role="tabpanel"
+									aria-labelledby="tests-tab"
+								>
+									<div class="slds-section slds-is-open">
+										<div class="slds-section__title">
+											<h3
+												class="slds-section__title-text"
+											>
+												Tests
+											</h3>
+											<lightning-button
+												label="Add Test"
+												variant="brand"
+												size="small"
+												onclick="{addTest}"
+												disabled="{isLoading}"
+											>
+											</lightning-button>
+										</div>
+										<div class="slds-section__content">
+											<template lwc:if="{hasTests}">
+												<template
+													for:each="{testItems}"
+													for:item="test"
+													for:index="index"
+												>
+													<div
+														key="{test.testNumber}"
+														class="slds-box slds-m-bottom_medium"
+													>
+														<div
+															class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+														>
+															<h4
+																class="slds-text-heading_small"
+															>
+																Test
+																{test.testNumber}
+															</h4>
+															<lightning-button
+																label="Delete"
+																variant="destructive"
+																size="small"
+																onclick="{deleteTest}"
+																data-index="{index}"
+																disabled="{isLoading}"
+															>
+															</lightning-button>
+														</div>
 
-                <!-- CSV Preview Section -->
-                <div class="slds-card">
-                    <div class="slds-card__header">
-                        <h2 class="slds-card__header-title">
-                            <span class="slds-text-heading_small">CSV Preview</span>
-                        </h2>
-                    </div>
-                    <div class="slds-card__body slds-card__body_inner">
-                        <div class="slds-box slds-theme_shade">
-                            <pre class="slds-text-body_small">{csvPreviewText}</pre>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </lightning-card>
+														<!-- Test Form -->
+														<div
+															class="slds-form slds-form_horizontal"
+														>
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="test-number-{index}"
+																	>Test
+																	Number</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="number"
+																		id="test-number-{index}"
+																		class="slds-input"
+																		value="{test.testNumber}"
+																		onchange="{updateTest}"
+																		data-index="{index}"
+																		data-field="testNumber"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="utterance-{index}"
+																	>Utterance</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<textarea
+																		id="utterance-{index}"
+																		class="slds-textarea"
+																		value="{test.utterance}"
+																		onchange="{updateTest}"
+																		data-index="{index}"
+																		data-field="utterance"
+																		disabled="{isLoading}"
+																	></textarea>
+																</div>
+															</div>
+
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="expected-topic-{index}"
+																	>Expected
+																	Topic</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<input
+																		type="text"
+																		id="expected-topic-{index}"
+																		class="slds-input"
+																		value="{test.expectedTopic}"
+																		onchange="{updateTest}"
+																		data-index="{index}"
+																		data-field="expectedTopic"
+																		disabled="{isLoading}"
+																	/>
+																</div>
+															</div>
+
+															<div
+																class="slds-form-element"
+															>
+																<label
+																	class="slds-form-element__label"
+																	for="expected-response-{index}"
+																	>Expected
+																	Response</label
+																>
+																<div
+																	class="slds-form-element__control"
+																>
+																	<textarea
+																		id="expected-response-{index}"
+																		class="slds-textarea"
+																		value="{test.expectedResponse}"
+																		onchange="{updateTest}"
+																		data-index="{index}"
+																		data-field="expectedResponse"
+																		disabled="{isLoading}"
+																	></textarea>
+																</div>
+															</div>
+														</div>
+
+														<!-- Actions Section -->
+														<div
+															class="slds-m-top_medium"
+														>
+															<div
+																class="slds-section__title"
+															>
+																<h5
+																	class="slds-section__title-text"
+																>
+																	Expected
+																	Actions
+																</h5>
+																<lightning-button
+																	label="Add Action"
+																	variant="brand"
+																	size="small"
+																	onclick="{addAction}"
+																	data-index="{index}"
+																	disabled="{isLoading}"
+																>
+																</lightning-button>
+															</div>
+															<div
+																class="slds-section__content"
+															>
+																<template
+																	lwc:if="{test.hasActions}"
+																>
+																	<template
+																		for:each="{test.expectedActions}"
+																		for:item="action"
+																		for:action-index="actionIndex"
+																	>
+																		<div
+																			key="{actionIndex}"
+																			class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+																		>
+																			<div
+																				class="slds-form-element slds-grow"
+																			>
+																				<input
+																					type="text"
+																					class="slds-input"
+																					value="{action}"
+																					onchange="{updateAction}"
+																					data-test-index="{index}"
+																					data-action-index="{actionIndex}"
+																					disabled="{isLoading}"
+																				/>
+																			</div>
+																			<lightning-button
+																				label="Delete"
+																				variant="destructive"
+																				size="small"
+																				onclick="{deleteAction}"
+																				data-test-index="{index}"
+																				data-action-index="{actionIndex}"
+																				disabled="{isLoading}"
+																			>
+																			</lightning-button>
+																		</div>
+																	</template>
+																</template>
+																<template
+																	lwc:else
+																>
+																	<p
+																		class="slds-text-color_weak slds-text-align_center slds-p-around_small"
+																	>
+																		No
+																		actions
+																		defined.
+																		Click
+																		"Add
+																		Action"
+																		to
+																		create
+																		one.
+																	</p>
+																</template>
+															</div>
+														</div>
+
+														<!-- Context Variables Section -->
+														<div
+															class="slds-m-top_medium"
+														>
+															<div
+																class="slds-section__title"
+															>
+																<h5
+																	class="slds-section__title-text"
+																>
+																	Context
+																	Variables
+																</h5>
+																<lightning-button
+																	label="Add Context Variable"
+																	variant="brand"
+																	size="small"
+																	onclick="{addTestContextVar}"
+																	data-index="{index}"
+																	disabled="{isLoading}"
+																>
+																</lightning-button>
+															</div>
+															<div
+																class="slds-section__content"
+															>
+																<template
+																	lwc:if="{test.hasContextVars}"
+																>
+																	<template
+																		for:each="{test.contextVariableEntries}"
+																		for:item="contextVar"
+																		for:context-index="contextIndex"
+																	>
+																		<div
+																			key="{contextVar.key}"
+																			class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_small"
+																		>
+																			<div
+																				class="slds-form-element slds-grow"
+																			>
+																				<label
+																					class="slds-form-element__label"
+																					>{contextVar.key}</label
+																				>
+																				<div
+																					class="slds-form-element__control"
+																				>
+																					<input
+																						type="text"
+																						class="slds-input"
+																						value="{contextVar.value}"
+																						onchange="{updateTestContextVar}"
+																						data-test-index="{index}"
+																						data-context-key="{contextVar.key}"
+																						disabled="{isLoading}"
+																					/>
+																				</div>
+																			</div>
+																			<lightning-button
+																				label="Delete"
+																				variant="destructive"
+																				size="small"
+																				onclick="{deleteTestContextVar}"
+																				data-test-index="{index}"
+																				data-context-key="{contextVar.key}"
+																				disabled="{isLoading}"
+																			>
+																			</lightning-button>
+																		</div>
+																	</template>
+																</template>
+																<template
+																	lwc:else
+																>
+																	<p
+																		class="slds-text-color_weak slds-text-align_center slds-p-around_small"
+																	>
+																		No
+																		context
+																		variables
+																		defined.
+																		Click
+																		"Add
+																		Context
+																		Variable"
+																		to
+																		create
+																		one.
+																	</p>
+																</template>
+															</div>
+														</div>
+													</div>
+												</template>
+											</template>
+											<template lwc:else>
+												<div
+													class="slds-text-align_center slds-p-around_large"
+												>
+													<p
+														class="slds-text-color_weak"
+													>
+														No tests found. Click
+														"Add Test" to create
+														one.
+													</p>
+												</div>
+											</template>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Export Section -->
+				<div class="slds-card slds-m-bottom_medium">
+					<div class="slds-card__header">
+						<h2 class="slds-card__header-title">
+							<span class="slds-text-heading_small"
+								>Export Options</span
+							>
+						</h2>
+					</div>
+					<div class="slds-card__body slds-card__body_inner">
+						<div
+							class="slds-grid slds-grid_align-center slds-gutters"
+						>
+							<div class="slds-col slds-size_1-of-2">
+								<lightning-button
+									label="Export CSV"
+									variant="brand"
+									icon-name="utility:download"
+									onclick="{exportCsv}"
+									disabled="{isLoading}"
+								>
+								</lightning-button>
+							</div>
+							<div class="slds-col slds-size_1-of-2">
+								<lightning-button
+									label="Export JSON"
+									variant="brand"
+									icon-name="utility:download"
+									onclick="{exportJson}"
+									disabled="{isLoading}"
+								>
+								</lightning-button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- CSV Preview Section -->
+				<div class="slds-card">
+					<div class="slds-card__header">
+						<h2 class="slds-card__header-title">
+							<span class="slds-text-heading_small"
+								>CSV Preview</span
+							>
+						</h2>
+					</div>
+					<div class="slds-card__body slds-card__body_inner">
+						<div class="slds-box slds-theme_shade">
+							<pre class="slds-text-body_small">
+{csvPreviewText}</pre
+							>
+						</div>
+					</div>
+				</div>
+			</template>
+		</div>
+	</lightning-card>
 </template>
