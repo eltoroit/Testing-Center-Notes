@@ -33,21 +33,14 @@
 					<button id="downloadBtn" class="btn btn-primary">
 						<i class="fas fa-download"></i> Download JSON
 					</button>
-					<button id="loadSampleBtn" class="btn btn-secondary">
-						<i class="fas fa-file-code"></i> Load Sample Data
-					</button>
 				</div>
 
-				<div class="toggle-controls">
-					<button id="toggleDataBtn" class="btn btn-outline">
-						<i class="fas fa-table"></i>
-						<span id="dataToggleText">Hide Data Table</span>
+				<div class="tabs">
+					<button id="dataTab" class="tab-btn active">
+						<i class="fas fa-database"></i> Data
 					</button>
-					<button id="toggleConversationsBtn" class="btn btn-outline">
-						<i class="fas fa-comments"></i>
-						<span id="conversationsToggleText"
-							>Hide Conversations Table</span
-						>
+					<button id="conversationsTab" class="tab-btn">
+						<i class="fas fa-comments"></i> Conversations
 					</button>
 				</div>
 			</div>
@@ -61,7 +54,7 @@
 				<p>Processing conversations...</p>
 			</div>
 
-			<div id="dataSection" class="section">
+			<div id="dataSection" class="tab-content active">
 				<div class="section-header">
 					<h2><i class="fas fa-database"></i> Data Entries</h2>
 					<button id="addDataBtn" class="btn btn-success">
@@ -91,7 +84,7 @@
 				</div>
 			</div>
 
-			<div id="conversationsSection" class="section">
+			<div id="conversationsSection" class="tab-content">
 				<div class="section-header">
 					<h2><i class="fas fa-comments"></i> Conversations</h2>
 					<button id="addConversationBtn" class="btn btn-success">

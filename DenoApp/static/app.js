@@ -13,7 +13,7 @@ class JsonDataEditor {
 		this.editingMessageIndex = null;
 
 		this.initializeEventListeners();
-		this.loadSampleData();
+		this.renderAll();
 	}
 
 	initializeEventListeners() {
@@ -24,17 +24,14 @@ class JsonDataEditor {
 		document
 			.getElementById("downloadBtn")
 			.addEventListener("click", () => this.handleDownload());
-		document
-			.getElementById("loadSampleBtn")
-			.addEventListener("click", () => this.loadSampleData());
 
-		// Toggle controls
+		// Tab controls
 		document
-			.getElementById("toggleDataBtn")
-			.addEventListener("click", () => this.toggleDataTable());
+			.getElementById("dataTab")
+			.addEventListener("click", () => this.switchTab("data"));
 		document
-			.getElementById("toggleConversationsBtn")
-			.addEventListener("click", () => this.toggleConversationsTable());
+			.getElementById("conversationsTab")
+			.addEventListener("click", () => this.switchTab("conversations"));
 
 		// Data table controls
 		document
@@ -45,61 +42,6 @@ class JsonDataEditor {
 		document
 			.getElementById("addConversationBtn")
 			.addEventListener("click", () => this.addConversation());
-	}
-
-	loadSampleData() {
-		this.jsonData = {
-			data: {
-				PatrickGo: {
-					key: "Patrick Go",
-					value: "003Nu00000FHNFjIAP"
-				},
-				YourMainLab: {
-					key: "Your Main Lab",
-					value: "001Nu00000F9fL4IAJ"
-				},
-				Task: {
-					key: "Task",
-					value: "00TNq00000E9c63MAB"
-				},
-				ClaireDufur: {
-					key: "Claire Dufur",
-					value: "0031T00004UOefRQAT"
-				},
-				SanfordHealth: {
-					key: "Sanford Health",
-					value: "0013800001PW36AAAT"
-				},
-				Webcast: {
-					key: "Webcast",
-					value: "00UNq000008fBqvMAE"
-				}
-			},
-			conversations: [
-				[
-					"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-					"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
-				],
-				[
-					"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
-					"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}"
-				],
-				[
-					"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
-					"{!data.Webcast.pair}"
-				],
-				[
-					"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-					"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}",
-					"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
-					"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}",
-					"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
-					"{!data.Webcast.pair}"
-				]
-			]
-		};
-		this.renderAll();
-		this.showToast("Sample data loaded successfully", "success");
 	}
 
 	handleFileUpload(event) {
@@ -151,34 +93,18 @@ class JsonDataEditor {
 		this.showToast("File downloaded successfully", "success");
 	}
 
-	toggleDataTable() {
-		this.showDataTable = !this.showDataTable;
-		const dataSection = document.getElementById("dataSection");
-		const toggleText = document.getElementById("dataToggleText");
+	switchTab(tabName) {
+		// Update tab buttons
+		document
+			.querySelectorAll(".tab-btn")
+			.forEach((btn) => btn.classList.remove("active"));
+		document.getElementById(tabName + "Tab").classList.add("active");
 
-		if (this.showDataTable) {
-			dataSection.style.display = "block";
-			toggleText.textContent = "Hide Data Table";
-		} else {
-			dataSection.style.display = "none";
-			toggleText.textContent = "Show Data Table";
-		}
-	}
-
-	toggleConversationsTable() {
-		this.showConversationsTable = !this.showConversationsTable;
-		const conversationsSection = document.getElementById(
-			"conversationsSection"
-		);
-		const toggleText = document.getElementById("conversationsToggleText");
-
-		if (this.showConversationsTable) {
-			conversationsSection.style.display = "block";
-			toggleText.textContent = "Hide Conversations Table";
-		} else {
-			conversationsSection.style.display = "none";
-			toggleText.textContent = "Show Conversations Table";
-		}
+		// Update tab content
+		document
+			.querySelectorAll(".tab-content")
+			.forEach((content) => content.classList.remove("active"));
+		document.getElementById(tabName + "Section").classList.add("active");
 	}
 
 	// Data Table Methods
@@ -326,90 +252,45 @@ class JsonDataEditor {
 		div.dataset.index = index;
 
 		const processedConversation = this.processedConversations[index] || [];
+		const inputText = conversation.join("\n");
+		const outputJson = JSON.stringify(processedConversation, null, 2);
 
 		div.innerHTML = `
             <div class="conversation-header">
                 <h3>Conversation ${index + 1}</h3>
                 <div class="conversation-actions">
-                    <button class="btn btn-sm btn-success" onclick="app.addMessage(${index})">
-                        <i class="fas fa-plus"></i> Add Message
+                    <button class="btn btn-sm btn-primary" onclick="app.cloneConversation(${index})">
+                        <i class="fas fa-copy"></i> Clone
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="app.deleteConversation(${index})">
-                        <i class="fas fa-trash"></i> Delete Conversation
+                        <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
             </div>
 
-            <div class="input-messages">
-                <h4>Input Messages (Editable)</h4>
-                <div class="messages-list">
-                    ${conversation
-						.map((message, messageIndex) =>
-							this.createMessageElement(
-								index,
-								messageIndex,
-								message
-							)
-						)
-						.join("")}
+            <div class="conversation-split">
+                <div class="conversation-input">
+                    <h4>Input (one message per line)</h4>
+                    <textarea 
+                        class="conversation-textarea" 
+                        data-conversation-index="${index}"
+                        placeholder="Enter messages, one per line..."
+                    >${inputText}</textarea>
                 </div>
-            </div>
-
-            <div class="processed-messages">
-                <h4>Processed Output (Read-only)</h4>
-                <div class="processed-list">
-                    ${processedConversation
-						.map(
-							(msg) => `
-                        <div class="processed-message">
-                            <strong>${msg.role}:</strong> ${msg.message}
-                        </div>
-                    `
-						)
-						.join("")}
+                <div class="conversation-output">
+                    <h4>Output (JSON)</h4>
+                    <div class="conversation-json">${outputJson}</div>
                 </div>
             </div>
         `;
+
+		// Add event listener for textarea changes
+		const textarea = div.querySelector(".conversation-textarea");
+		textarea.addEventListener("input", (e) => {
+			this.handleConversationInputChange(index, e.target.value);
+		});
 
 		return div;
-	}
-
-	createMessageElement(conversationIndex, messageIndex, message) {
-		const isEditing =
-			this.editingConversationIndex === conversationIndex &&
-			this.editingMessageIndex === messageIndex;
-		const role = this.getRoleForMessage(messageIndex);
-
-		return `
-            <div class="message-row" data-conversation-index="${conversationIndex}" data-message-index="${messageIndex}">
-                <div class="message-content">
-                    ${
-						isEditing
-							? `<textarea class="form-textarea" rows="2">${message}</textarea>`
-							: `<div class="message-display">
-                            <strong>${role}:</strong> ${message}
-                        </div>`
-					}
-                </div>
-                <div class="message-actions">
-                    ${
-						isEditing
-							? `<button class="btn btn-sm btn-success" onclick="app.saveMessage(${conversationIndex}, ${messageIndex})">
-                            <i class="fas fa-check"></i> Save
-                        </button>
-                        <button class="btn btn-sm btn-secondary" onclick="app.cancelMessageEdit()">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>`
-							: `<button class="btn btn-sm btn-primary" onclick="app.editMessage(${conversationIndex}, ${messageIndex})">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteMessage(${conversationIndex}, ${messageIndex})">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>`
-					}
-                </div>
-            </div>
-        `;
 	}
 
 	addConversation() {
@@ -418,55 +299,19 @@ class JsonDataEditor {
 		this.processConversations();
 	}
 
-	addMessage(conversationIndex) {
-		this.jsonData.conversations[conversationIndex].push("");
+	cloneConversation(index) {
+		const originalConversation = [...this.jsonData.conversations[index]];
+		this.jsonData.conversations.push(originalConversation);
 		this.renderConversations();
 		this.processConversations();
+		this.showToast("Conversation cloned successfully", "success");
 	}
 
-	editMessage(conversationIndex, messageIndex) {
-		this.editingConversationIndex = conversationIndex;
-		this.editingMessageIndex = messageIndex;
-		this.renderConversations();
-	}
-
-	saveMessage(conversationIndex, messageIndex) {
-		const textarea = document.querySelector(
-			`[data-conversation-index="${conversationIndex}"][data-message-index="${messageIndex}"] textarea`
-		);
-
-		if (textarea) {
-			const newValue = textarea.value.trim();
-			if (newValue) {
-				this.jsonData.conversations[conversationIndex][messageIndex] =
-					newValue;
-				this.editingConversationIndex = null;
-				this.editingMessageIndex = null;
-				this.renderConversations();
-				this.processConversations();
-				this.showToast("Message saved successfully", "success");
-			} else {
-				this.showToast("Please enter a message", "error");
-			}
-		}
-	}
-
-	cancelMessageEdit() {
-		this.editingConversationIndex = null;
-		this.editingMessageIndex = null;
-		this.renderConversations();
-	}
-
-	deleteMessage(conversationIndex, messageIndex) {
-		if (confirm("Are you sure you want to delete this message?")) {
-			this.jsonData.conversations[conversationIndex].splice(
-				messageIndex,
-				1
-			);
-			this.renderConversations();
-			this.processConversations();
-			this.showToast("Message deleted", "success");
-		}
+	handleConversationInputChange(conversationIndex, text) {
+		// Split by lines and filter out empty lines
+		const messages = text.split("\n").filter((line) => line.trim() !== "");
+		this.jsonData.conversations[conversationIndex] = messages;
+		this.processConversations();
 	}
 
 	deleteConversation(index) {
@@ -511,9 +356,25 @@ class JsonDataEditor {
 			});
 
 			this.hideLoadingSpinner();
-			this.renderConversations();
+			this.updateConversationOutputs();
 			this.isLoading = false;
 		}, 100);
+	}
+
+	updateConversationOutputs() {
+		// Update the JSON output for each conversation without re-rendering the entire UI
+		this.jsonData.conversations.forEach((conversation, index) => {
+			const processedConversation =
+				this.processedConversations[index] || [];
+			const outputJson = JSON.stringify(processedConversation, null, 2);
+
+			const outputElement = document.querySelector(
+				`[data-index="${index}"] .conversation-json`
+			);
+			if (outputElement) {
+				outputElement.textContent = outputJson;
+			}
+		});
 	}
 
 	processMergeFields(message, data) {

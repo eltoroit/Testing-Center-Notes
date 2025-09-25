@@ -54,10 +54,48 @@ body {
 	align-items: center;
 }
 
-.toggle-controls {
+/* Tabs */
+.tabs {
 	display: flex;
-	gap: 10px;
-	flex-wrap: wrap;
+	gap: 0;
+	border-radius: 8px;
+	overflow: hidden;
+	border: 1px solid #dee2e6;
+	background: #f8f9fa;
+}
+
+.tab-btn {
+	flex: 1;
+	padding: 12px 20px;
+	border: none;
+	background: transparent;
+	color: #6c757d;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.tab-btn:hover {
+	background: #e9ecef;
+	color: #495057;
+}
+
+.tab-btn.active {
+	background: white;
+	color: #007bff;
+	border-bottom: 2px solid #007bff;
+}
+
+.tab-content {
+	display: none;
+}
+
+.tab-content.active {
+	display: block;
 }
 
 /* Buttons */
@@ -280,7 +318,78 @@ body {
 	border-radius: 8px;
 	padding: 20px;
 	margin-bottom: 20px;
+	background: white;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.conversation-split {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+	margin-top: 15px;
+}
+
+.conversation-input {
+	display: flex;
+	flex-direction: column;
+}
+
+.conversation-output {
+	display: flex;
+	flex-direction: column;
+}
+
+.conversation-input h4,
+.conversation-output h4 {
+	margin-bottom: 10px;
+	padding-bottom: 8px;
+	border-bottom: 2px solid #dee2e6;
+	color: #495057;
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+.conversation-input h4 {
+	border-bottom-color: #007bff;
+}
+
+.conversation-output h4 {
+	border-bottom-color: #28a745;
+}
+
+.conversation-textarea {
+	width: 100%;
+	min-height: 200px;
+	padding: 12px;
+	border: 1px solid #ced4da;
+	border-radius: 6px;
+	font-family: 'Courier New', monospace;
+	font-size: 14px;
+	line-height: 1.5;
+	resize: vertical;
 	background: #f8f9fa;
+}
+
+.conversation-textarea:focus {
+	outline: none;
+	border-color: #007bff;
+	box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+	background: white;
+}
+
+.conversation-json {
+	width: 100%;
+	min-height: 200px;
+	padding: 12px;
+	border: 1px solid #28a745;
+	border-radius: 6px;
+	background: #f0f8ff;
+	font-family: 'Courier New', monospace;
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: pre-wrap;
+	overflow-y: auto;
+	color: #333;
 }
 
 .conversation-header {
@@ -487,8 +596,17 @@ body {
 		align-items: stretch;
 	}
 
-	.toggle-controls {
+	.conversation-split {
+		grid-template-columns: 1fr;
+		gap: 15px;
+	}
+
+	.tabs {
 		flex-direction: column;
+	}
+
+	.tab-btn {
+		border-radius: 0;
 	}
 
 	.section-header {
