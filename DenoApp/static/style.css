@@ -357,24 +357,77 @@ body {
 	border-bottom-color: #28a745;
 }
 
-.conversation-textarea {
-	width: 100%;
-	min-height: 200px;
-	padding: 12px;
-	border: 1px solid #ced4da;
-	border-radius: 6px;
-	font-family: 'Courier New', monospace;
-	font-size: 14px;
-	line-height: 1.5;
-	resize: vertical;
-	background: #f8f9fa;
+.messages-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
 }
 
-.conversation-textarea:focus {
+.message-input-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px;
+	background: #f8f9fa;
+	border-radius: 6px;
+	border: 1px solid #e9ecef;
+}
+
+.message-label {
+	flex-shrink: 0;
+	width: 60px;
+}
+
+.role-badge {
+	display: inline-block;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	text-align: center;
+	min-width: 50px;
+}
+
+.role-user {
+	background: #e6f3ff;
+	color: #007bff;
+	border: 1px solid #007bff;
+}
+
+.role-agent {
+	background: #e8f5e8;
+	color: #28a745;
+	border: 1px solid #28a745;
+}
+
+.message-input {
+	flex: 1;
+}
+
+.message-textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #ced4da;
+	border-radius: 4px;
+	font-family: 'Courier New', monospace;
+	font-size: 14px;
+	line-height: 1.4;
+	resize: vertical;
+	background: white;
+	transition: border-color 0.2s ease;
+}
+
+.message-textarea:focus {
 	outline: none;
 	border-color: #007bff;
 	box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-	background: white;
+}
+
+.message-actions {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
 }
 
 .conversation-json {
@@ -599,6 +652,20 @@ body {
 	.conversation-split {
 		grid-template-columns: 1fr;
 		gap: 15px;
+	}
+
+	.message-input-row {
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.message-label {
+		width: auto;
+		align-self: flex-start;
+	}
+
+	.message-actions {
+		align-self: flex-end;
 	}
 
 	.tabs {

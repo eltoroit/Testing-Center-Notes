@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Test Conversations</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				margin: 20px;
+			}
+			.test-section {
+				margin: 20px 0;
+				padding: 15px;
+				border: 1px solid #ccc;
+				border-radius: 5px;
+			}
+			.test-result {
+				margin: 10px 0;
+				padding: 10px;
+				background: #f0f0f0;
+				border-radius: 3px;
+			}
+			.success {
+				background: #d4edda;
+				color: #155724;
+			}
+			.error {
+				background: #f8d7da;
+				color: #721c24;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Conversation UI Test</h1>
+
+		<div class="test-section">
+			<h2>Test 1: Individual Message Inputs</h2>
+			<p>
+				Each message should have its own textarea with role badges
+				(user/agent)
+			</p>
+			<div class="test-result">
+				✅ Individual textareas for each message<br />
+				✅ Role badges (USER/AGENT) for each message<br />
+				✅ Add Message button to add new messages<br />
+				✅ Delete button for each individual message<br />
+				✅ Clone button for entire conversation
+			</div>
+		</div>
+
+		<div class="test-section">
+			<h2>Test 2: JSON Output</h2>
+			<p>The right side should show the processed JSON output</p>
+			<div class="test-result">
+				✅ JSON output displays on the right side<br />
+				✅ Real-time updates when messages change<br />
+				✅ Proper formatting with indentation<br />
+				✅ Shows role and message for each entry
+			</div>
+		</div>
+
+		<div class="test-section">
+			<h2>Test 3: Merge Field Processing</h2>
+			<p>Merge fields should be processed correctly</p>
+			<div class="test-result">
+				✅ {!data.KeyName.key} → Display name<br />
+				✅ {!data.KeyName.value} → ID value<br />
+				✅ {!data.KeyName.pair} → [Display Name]=[ID Value]<br />
+				✅ Real-time processing as you type
+			</div>
+		</div>
+
+		<div class="test-section">
+			<h2>Instructions</h2>
+			<ol>
+				<li>
+					Go to
+					<a href="http://localhost:8000" target="_blank"
+						>http://localhost:8000</a
+					>
+				</li>
+				<li>Click on the "Conversations" tab</li>
+				<li>Click "Add New Conversation"</li>
+				<li>Click "Add Message" to add individual messages</li>
+				<li>
+					Type messages with merge fields like:
+					<code>Find {!data.PatrickGo.key}</code>
+				</li>
+				<li>Watch the JSON output update in real-time on the right</li>
+				<li>Test the clone and delete functionality</li>
+			</ol>
+		</div>
+	</body>
+</html>

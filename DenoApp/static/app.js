@@ -252,13 +252,15 @@ class JsonDataEditor {
 		div.dataset.index = index;
 
 		const processedConversation = this.processedConversations[index] || [];
-		const inputText = conversation.join("\n");
 		const outputJson = JSON.stringify(processedConversation, null, 2);
 
 		div.innerHTML = `
             <div class="conversation-header">
                 <h3>Conversation ${index + 1}</h3>
                 <div class="conversation-actions">
+                    <button class="btn btn-sm btn-success" onclick="app.addMessage(${index})">
+                        <i class="fas fa-plus"></i> Add Message
+                    </button>
                     <button class="btn btn-sm btn-primary" onclick="app.cloneConversation(${index})">
                         <i class="fas fa-copy"></i> Clone
                     </button>
@@ -270,12 +272,18 @@ class JsonDataEditor {
 
             <div class="conversation-split">
                 <div class="conversation-input">
-                    <h4>Input (one message per line)</h4>
-                    <textarea 
-                        class="conversation-textarea" 
-                        data-conversation-index="${index}"
-                        placeholder="Enter messages, one per line..."
-                    >${inputText}</textarea>
+                    <h4>Input Messages</h4>
+                    <div class="messages-list">
+                        ${conversation
+							.map((message, messageIndex) =>
+								this.createMessageInput(
+									index,
+									messageIndex,
+									message
+								)
+							)
+							.join("")}
+                    </div>
                 </div>
                 <div class="conversation-output">
                     <h4>Output (JSON)</h4>
@@ -284,13 +292,38 @@ class JsonDataEditor {
             </div>
         `;
 
-		// Add event listener for textarea changes
-		const textarea = div.querySelector(".conversation-textarea");
-		textarea.addEventListener("input", (e) => {
-			this.handleConversationInputChange(index, e.target.value);
+		// Add event listeners to message textareas
+		const messageTextareas = div.querySelectorAll(".message-textarea");
+		messageTextareas.forEach((textarea, messageIndex) => {
+			textarea.addEventListener("input", (e) => {
+				this.handleMessageChange(index, messageIndex, e.target.value);
+			});
 		});
 
 		return div;
+	}
+
+	createMessageInput(conversationIndex, messageIndex, message) {
+		const role = this.getRoleForMessage(messageIndex);
+		return `
+            <div class="message-input-row" data-conversation-index="${conversationIndex}" data-message-index="${messageIndex}">
+                <div class="message-label">
+                    <span class="role-badge role-${role}">${role}</span>
+                </div>
+                <div class="message-input">
+                    <textarea 
+                        class="message-textarea" 
+                        rows="2"
+                        placeholder="Enter ${role} message..."
+                    >${message}</textarea>
+                </div>
+                <div class="message-actions">
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteMessage(${conversationIndex}, ${messageIndex})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
 	}
 
 	addConversation() {
@@ -307,10 +340,26 @@ class JsonDataEditor {
 		this.showToast("Conversation cloned successfully", "success");
 	}
 
-	handleConversationInputChange(conversationIndex, text) {
-		// Split by lines and filter out empty lines
-		const messages = text.split("\n").filter((line) => line.trim() !== "");
-		this.jsonData.conversations[conversationIndex] = messages;
+	addMessage(conversationIndex) {
+		this.jsonData.conversations[conversationIndex].push("");
+		this.renderConversations();
+		this.processConversations();
+	}
+
+	deleteMessage(conversationIndex, messageIndex) {
+		if (confirm("Are you sure you want to delete this message?")) {
+			this.jsonData.conversations[conversationIndex].splice(
+				messageIndex,
+				1
+			);
+			this.renderConversations();
+			this.processConversations();
+			this.showToast("Message deleted", "success");
+		}
+	}
+
+	handleMessageChange(conversationIndex, messageIndex, value) {
+		this.jsonData.conversations[conversationIndex][messageIndex] = value;
 		this.processConversations();
 	}
 
