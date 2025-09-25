@@ -30,13 +30,20 @@
 							style="display: none"
 						/>
 					</div>
-					<button id="downloadBtn" class="btn btn-primary" style="display: none;">
+					<button
+						id="downloadBtn"
+						class="btn btn-primary"
+						style="display: none"
+					>
 						<i class="fas fa-download"></i> Download JSON
 					</button>
 				</div>
 
-
-				<div id="mainContent" class="main-content" style="display: none;">
+				<div
+					id="mainContent"
+					class="main-content"
+					style="display: none"
+				>
 					<div class="tabs">
 						<button id="dataTab" class="tab-btn active">
 							<i class="fas fa-database"></i> Data
@@ -45,72 +52,81 @@
 							<i class="fas fa-comments"></i> Conversations
 						</button>
 					</div>
-				</div>
-			</div>
 
-			<div id="loadingSpinner" class="loading-spinner">
-				<div class="spinner"></div>
-				<p>Processing conversations...</p>
-			</div>
+					<div id="dataSection" class="tab-content active">
+						<div class="section-header">
+							<h2>
+								<i class="fas fa-database"></i> Data Entries
+							</h2>
+							<button id="addDataBtn" class="btn btn-success">
+								<i class="fas fa-plus"></i> Add New Entry
+							</button>
+						</div>
 
-			<div id="dataSection" class="tab-content active">
-				<div class="section-header">
-					<h2><i class="fas fa-database"></i> Data Entries</h2>
-					<button id="addDataBtn" class="btn btn-success">
-						<i class="fas fa-plus"></i> Add New Entry
-					</button>
-				</div>
+						<div id="dataTable" class="table-container">
+							<table id="dataTableContent" class="data-table">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Key</th>
+										<th>Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="dataTableBody">
+									<!-- Data rows will be populated here -->
+								</tbody>
+							</table>
+							<div id="noDataMessage" class="empty-state">
+								<i class="fas fa-inbox"></i>
+								<p>
+									No data entries found. Add some data to get
+									started.
+								</p>
+							</div>
+						</div>
+					</div>
 
-				<div id="dataTable" class="table-container">
-					<table id="dataTableContent" class="data-table">
-						<thead>
-							<tr>
-								<th>ID</th>
-								<th>Key</th>
-								<th>Value</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody id="dataTableBody">
-							<!-- Data rows will be populated here -->
-						</tbody>
-					</table>
-					<div id="noDataMessage" class="empty-state">
-						<i class="fas fa-inbox"></i>
-						<p>
-							No data entries found. Add some data to get started.
-						</p>
+					<div id="conversationsSection" class="tab-content">
+						<div class="section-header">
+							<h2>
+								<i class="fas fa-comments"></i> Conversations
+							</h2>
+							<div class="header-actions">
+								<button
+									id="openMergeFieldModalBtn2"
+									class="btn btn-info"
+								>
+									<i class="fas fa-magic"></i> Generate Merge
+									Field
+								</button>
+								<button
+									id="addConversationBtn"
+									class="btn btn-success"
+								>
+									<i class="fas fa-plus"></i> Add New
+									Conversation
+								</button>
+							</div>
+						</div>
+						<div id="conversationsContainer">
+							<!-- Conversations will be populated here -->
+						</div>
+						<div id="noConversationsMessage" class="empty-state">
+							<i class="fas fa-comment-slash"></i>
+							<p>
+								No conversations found. Add some conversations
+								to get started.
+							</p>
+						</div>
+					</div>
+
+					<div id="loadingSpinner" class="loading-spinner">
+						<div class="spinner"></div>
+						<p>Processing conversations...</p>
 					</div>
 				</div>
 			</div>
-
-			<div id="conversationsSection" class="tab-content">
-				<div class="section-header">
-					<h2><i class="fas fa-comments"></i> Conversations</h2>
-					<div class="header-actions">
-						<button
-							id="openMergeFieldModalBtn2"
-							class="btn btn-info"
-						>
-							<i class="fas fa-magic"></i> Generate Merge Field
-						</button>
-						<button id="addConversationBtn" class="btn btn-success">
-							<i class="fas fa-plus"></i> Add New Conversation
-						</button>
-					</div>
-				</div>
-				<div id="conversationsContainer">
-					<!-- Conversations will be populated here -->
-				</div>
-				<div id="noConversationsMessage" class="empty-state">
-					<i class="fas fa-comment-slash"></i>
-					<p>
-						No conversations found. Add some conversations to get
-						started.
-					</p>
-				</div>
-			</div>
-		</div>
 
 			<div class="toast-container" id="toastContainer">
 				<!-- Toast notifications will appear here -->

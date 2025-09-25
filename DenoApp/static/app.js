@@ -79,6 +79,22 @@ class JsonDataEditor {
 	handleFileUpload(event) {
 		const file = event.target.files[0];
 		if (file && file.type === "application/json") {
+			// Check if there's existing data and ask for confirmation
+			const hasExistingData =
+				Object.keys(this.jsonData.data).length > 0 ||
+				this.jsonData.conversations.length > 0;
+
+			if (hasExistingData) {
+				const confirmed = confirm(
+					"This will replace all existing data. Are you sure you want to continue?"
+				);
+				if (!confirmed) {
+					// Reset the file input so it can be used again
+					event.target.value = "";
+					return;
+				}
+			}
+
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				try {
@@ -101,8 +117,13 @@ class JsonDataEditor {
 				}
 			};
 			reader.readAsText(file);
+
+			// Reset the file input so it can be used again
+			event.target.value = "";
 		} else {
 			this.showToast("Please select a valid JSON file", "error");
+			// Reset the file input
+			event.target.value = "";
 		}
 	}
 
@@ -409,6 +430,18 @@ class JsonDataEditor {
 		}
 	}
 
+	copyConversationOutput(conversationIndex) {
+		const processedConversation =
+			this.processedConversations[conversationIndex] || [];
+		const outputJson = JSON.stringify(processedConversation, null, 2);
+
+		this.copyToClipboard(outputJson);
+		this.showToast(
+			`Copied conversation ${conversationIndex + 1} JSON output`,
+			"success"
+		);
+	}
+
 	copyToClipboard(text) {
 		if (navigator.clipboard && window.isSecureContext) {
 			// Use modern clipboard API
@@ -614,7 +647,12 @@ class JsonDataEditor {
                     </div>
                 </div>
                 <div class="conversation-output">
-                    <h4>Output (JSON)</h4>
+                    <div class="output-header">
+                        <h4>Output (JSON)</h4>
+                        <button class="btn btn-sm btn-info" onclick="app.copyConversationOutput(${index})">
+                            <i class="fas fa-copy"></i> Copy JSON
+                        </button>
+                    </div>
                     <div class="conversation-json">${outputJson}</div>
                 </div>
             </div>

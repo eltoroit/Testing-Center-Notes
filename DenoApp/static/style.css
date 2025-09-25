@@ -640,6 +640,21 @@ body {
 	border-bottom-color: #28a745;
 }
 
+.output-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+.output-header h4 {
+	margin: 0;
+	color: #495057;
+	font-size: 1.1rem;
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
 .messages-list {
 	display: flex;
 	flex-direction: column;
@@ -968,6 +983,12 @@ body {
 	.conversation-header {
 		flex-direction: column;
 		gap: 15px;
+		align-items: stretch;
+	}
+
+	.output-header {
+		flex-direction: column;
+		gap: 10px;
 		align-items: stretch;
 	}
 
