@@ -1,12 +1,6 @@
 import { LightningElement, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import {
-	validateJsonStructure,
-	generateCsvData,
-	convertToCsv,
-	createDownloadBlob,
-	triggerDownload,
-} from "c/dataTransformationUtils";
+import { validateJsonStructure, generateCsvData, convertToCsv, createDownloadBlob, triggerDownload } from "c/dataTransformationUtils";
 
 export default class JsonTestDataEditor extends LightningElement {
 	// Raw data state
@@ -16,7 +10,7 @@ export default class JsonTestDataEditor extends LightningElement {
 	@track currentData = {
 		data: {},
 		contextVariables: {},
-		tests: [],
+		tests: []
 	};
 
 	// UI state
@@ -51,12 +45,10 @@ export default class JsonTestDataEditor extends LightningElement {
 	}
 
 	get dataItems() {
-		return Object.entries(this.currentData.data || {}).map(
-			([key, value]) => ({
-				key,
-				value,
-			})
-		);
+		return Object.entries(this.currentData.data || {}).map(([key, value]) => ({
+			key,
+			value
+		}));
 	}
 
 	get hasDataItems() {
@@ -64,12 +56,10 @@ export default class JsonTestDataEditor extends LightningElement {
 	}
 
 	get contextItems() {
-		return Object.entries(this.currentData.contextVariables || {}).map(
-			([key, value]) => ({
-				key,
-				value,
-			})
-		);
+		return Object.entries(this.currentData.contextVariables || {}).map(([key, value]) => ({
+			key,
+			value
+		}));
 	}
 
 	get hasContextItems() {
@@ -81,12 +71,11 @@ export default class JsonTestDataEditor extends LightningElement {
 			...test,
 			hasActions: (test.expectedActions || []).length > 0,
 			hasContextVars: Object.keys(test.contextVariables || {}).length > 0,
-			contextVariableEntries: Object.entries(
-				test.contextVariables || {}
-			).map(([key, value]) => ({
+			hasConversationHistory: (test.conversationHistory || []).length > 0,
+			contextVariableEntries: Object.entries(test.contextVariables || {}).map(([key, value]) => ({
 				key,
-				value,
-			})),
+				value
+			}))
 		}));
 	}
 
@@ -163,7 +152,7 @@ export default class JsonTestDataEditor extends LightningElement {
 		this.currentData = {
 			data: {},
 			contextVariables: {},
-			tests: [],
+			tests: []
 		};
 		this.originalFileName = "";
 		this.validationErrors = [];
@@ -182,10 +171,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		if (!validation.isValid) {
 			this.validationErrors = validation.errors;
-			this.showError(
-				"JSON Validation Failed",
-				"Please fix the validation errors before proceeding."
-			);
+			this.showError("JSON Validation Failed", "Please fix the validation errors before proceeding.");
 			return;
 		}
 
@@ -199,13 +185,10 @@ export default class JsonTestDataEditor extends LightningElement {
 		this.currentData = {
 			data: { ...jsonData.data },
 			contextVariables: { ...jsonData.contextVariables },
-			tests: JSON.parse(JSON.stringify(jsonData.tests)),
+			tests: JSON.parse(JSON.stringify(jsonData.tests))
 		};
 
-		this.showSuccess(
-			"File Loaded",
-			"JSON file loaded and validated successfully."
-		);
+		this.showSuccess("File Loaded", "JSON file loaded and validated successfully.");
 	}
 
 	// Tab handling
@@ -222,8 +205,8 @@ export default class JsonTestDataEditor extends LightningElement {
 			...this.currentData,
 			data: {
 				...this.currentData.data,
-				[newKey]: { key: "", value: "" },
-			},
+				[newKey]: { key: "", value: "" }
+			}
 		};
 	}
 
@@ -247,7 +230,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 				this.currentData = {
 					...this.currentData,
-					data: newData,
+					data: newData
 				};
 			}
 		} else if (field === "displayKey") {
@@ -257,9 +240,9 @@ export default class JsonTestDataEditor extends LightningElement {
 					...this.currentData.data,
 					[item.key]: {
 						...item.value,
-						key: value,
-					},
-				},
+						key: value
+					}
+				}
 			};
 		} else if (field === "value") {
 			this.currentData = {
@@ -268,9 +251,9 @@ export default class JsonTestDataEditor extends LightningElement {
 					...this.currentData.data,
 					[item.key]: {
 						...item.value,
-						value: value,
-					},
-				},
+						value: value
+					}
+				}
 			};
 		}
 	}
@@ -285,7 +268,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			data: newData,
+			data: newData
 		};
 	}
 
@@ -296,8 +279,8 @@ export default class JsonTestDataEditor extends LightningElement {
 			...this.currentData,
 			contextVariables: {
 				...this.currentData.contextVariables,
-				[newKey]: "",
-			},
+				[newKey]: ""
+			}
 		};
 	}
 
@@ -321,7 +304,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 				this.currentData = {
 					...this.currentData,
-					contextVariables: newContextVars,
+					contextVariables: newContextVars
 				};
 			}
 		} else if (field === "value") {
@@ -329,8 +312,8 @@ export default class JsonTestDataEditor extends LightningElement {
 				...this.currentData,
 				contextVariables: {
 					...this.currentData.contextVariables,
-					[item.key]: value,
-				},
+					[item.key]: value
+				}
 			};
 		}
 	}
@@ -345,7 +328,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			contextVariables: newContextVars,
+			contextVariables: newContextVars
 		};
 	}
 
@@ -358,12 +341,12 @@ export default class JsonTestDataEditor extends LightningElement {
 			expectedActions: [],
 			expectedResponse: "",
 			conversationHistory: [],
-			contextVariables: {},
+			contextVariables: {}
 		};
 
 		this.currentData = {
 			...this.currentData,
-			tests: [...(this.currentData.tests || []), newTest],
+			tests: [...(this.currentData.tests || []), newTest]
 		};
 	}
 
@@ -375,12 +358,12 @@ export default class JsonTestDataEditor extends LightningElement {
 		const tests = [...this.currentData.tests];
 		tests[index] = {
 			...tests[index],
-			[field]: field === "testNumber" ? parseInt(value) || 1 : value,
+			[field]: field === "testNumber" ? parseInt(value) || 1 : value
 		};
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -391,7 +374,70 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
+		};
+	}
+
+	// Conversation history methods
+	addConversation(event) {
+		const testIndex = parseInt(event.target.dataset.index);
+		const newConversation = {
+			role: "user",
+			message: ""
+		};
+
+		const tests = [...this.currentData.tests];
+		tests[testIndex] = {
+			...tests[testIndex],
+			conversationHistory: [...(tests[testIndex].conversationHistory || []), newConversation]
+		};
+
+		this.currentData = {
+			...this.currentData,
+			tests
+		};
+	}
+
+	updateConversation(event) {
+		const testIndex = parseInt(event.target.dataset.testIndex);
+		const convIndex = parseInt(event.target.dataset.convIndex);
+		const field = event.target.dataset.field;
+		const value = event.target.value;
+
+		const tests = [...this.currentData.tests];
+		const conversationHistory = [...tests[testIndex].conversationHistory];
+		conversationHistory[convIndex] = {
+			...conversationHistory[convIndex],
+			[field]: value
+		};
+
+		tests[testIndex] = {
+			...tests[testIndex],
+			conversationHistory
+		};
+
+		this.currentData = {
+			...this.currentData,
+			tests
+		};
+	}
+
+	deleteConversation(event) {
+		const testIndex = parseInt(event.target.dataset.testIndex);
+		const convIndex = parseInt(event.target.dataset.convIndex);
+
+		const tests = [...this.currentData.tests];
+		const conversationHistory = [...tests[testIndex].conversationHistory];
+		conversationHistory.splice(convIndex, 1);
+
+		tests[testIndex] = {
+			...tests[testIndex],
+			conversationHistory
+		};
+
+		this.currentData = {
+			...this.currentData,
+			tests
 		};
 	}
 
@@ -399,14 +445,11 @@ export default class JsonTestDataEditor extends LightningElement {
 	addAction(event) {
 		const testIndex = parseInt(event.target.dataset.index);
 		const tests = [...this.currentData.tests];
-		tests[testIndex].expectedActions = [
-			...(tests[testIndex].expectedActions || []),
-			"",
-		];
+		tests[testIndex].expectedActions = [...(tests[testIndex].expectedActions || []), ""];
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -420,7 +463,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -433,7 +476,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -447,26 +490,19 @@ export default class JsonTestDataEditor extends LightningElement {
 		}
 
 		// Find first available context variable from the main contextVariables section
-		const availableContextVars = Object.keys(
-			this.currentData.contextVariables || {}
-		);
+		const availableContextVars = Object.keys(this.currentData.contextVariables || {});
 		const usedContextVars = Object.keys(tests[testIndex].contextVariables);
-		const newContextVar = availableContextVars.find(
-			(key) => !usedContextVars.includes(key)
-		);
+		const newContextVar = availableContextVars.find((key) => !usedContextVars.includes(key));
 
 		if (newContextVar) {
 			tests[testIndex].contextVariables[newContextVar] = "";
 
 			this.currentData = {
 				...this.currentData,
-				tests,
+				tests
 			};
 		} else {
-			this.showError(
-				"No Available Context Variables",
-				"All context variables are already used in this test."
-			);
+			this.showError("No Available Context Variables", "All context variables are already used in this test.");
 		}
 	}
 
@@ -480,7 +516,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -493,7 +529,7 @@ export default class JsonTestDataEditor extends LightningElement {
 
 		this.currentData = {
 			...this.currentData,
-			tests,
+			tests
 		};
 	}
 
@@ -505,15 +541,9 @@ export default class JsonTestDataEditor extends LightningElement {
 			const blob = createDownloadBlob(csvText, "text/csv");
 			triggerDownload(blob, `${this.originalFileName || "export"}.csv`);
 
-			this.showSuccess(
-				"CSV Exported",
-				"CSV file has been downloaded successfully."
-			);
+			this.showSuccess("CSV Exported", "CSV file has been downloaded successfully.");
 		} catch (error) {
-			this.showError(
-				"Export Failed",
-				`Error exporting CSV: ${error.message}`
-			);
+			this.showError("Export Failed", `Error exporting CSV: ${error.message}`);
 		}
 	}
 
@@ -523,15 +553,9 @@ export default class JsonTestDataEditor extends LightningElement {
 			const blob = createDownloadBlob(jsonText, "application/json");
 			triggerDownload(blob, `${this.originalFileName || "export"}.json`);
 
-			this.showSuccess(
-				"JSON Exported",
-				"JSON file has been downloaded successfully."
-			);
+			this.showSuccess("JSON Exported", "JSON file has been downloaded successfully.");
 		} catch (error) {
-			this.showError(
-				"Export Failed",
-				`Error exporting JSON: ${error.message}`
-			);
+			this.showError("Export Failed", `Error exporting JSON: ${error.message}`);
 		}
 	}
 
@@ -540,7 +564,7 @@ export default class JsonTestDataEditor extends LightningElement {
 		const evt = new ShowToastEvent({
 			title: title,
 			message: message,
-			variant: "success",
+			variant: "success"
 		});
 		this.dispatchEvent(evt);
 	}
@@ -549,7 +573,7 @@ export default class JsonTestDataEditor extends LightningElement {
 		const evt = new ShowToastEvent({
 			title: title,
 			message: message,
-			variant: "error",
+			variant: "error"
 		});
 		this.dispatchEvent(evt);
 	}
