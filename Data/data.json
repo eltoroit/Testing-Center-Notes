@@ -25,127 +25,27 @@
 			"value": "00UNq000008fBqvMAE}"
 		}
 	},
-	"contextVariables": {
-		"currentObjectApiName": "Context Variable currentObjectApiName",
-		"currentRecordId": "Context Variable currentRecordId"
-	},
-	"tests": [
-		{
-			"testNumber": 1,
-			"conversationHistory": [],
-			"utterance": "Log a call with {!data.PatrickGo.key} about the new assay discounts",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["IdentifyRecordByName"],
-			"expectedResponse": "Multiple matches found for '{!data.PatrickGo.key}'. Please select the correct contact."
-		},
-		{
-			"testNumber": 2,
-			"conversationHistory": [],
-			"utterance": "Log a call with {!data.PatrickGo.key} from {!data.YourMainLab.key} account about the new assay discounts",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": [
-				"IdentifyRecordByName",
-				"IdentifyRecordByName",
-				"LogACall"
-			],
-			"expectedResponse": "The call has been successfully logged. Displays basic information about the new record."
-		},
-		{
-			"testNumber": 3,
-			"conversationHistory": [
-				"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-				"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
-			],
-			"utterance": "Log a call with {!data.PatrickGo.key} about the new assay discounts",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["LogACall"],
-			"expectedResponse": "The call has been successfully logged. Displays basic information about the new record."
-		},
-		{
-			"testNumber": 4,
-			"conversationHistory": [],
-			"utterance": "Log a call with {!data.PatrickGo.key} about the new assay discounts",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["LogACall"],
-			"expectedResponse": "The call has been successfully logged. Displays basic information about the new record.",
-			"contextVariables": {
-				"currentObjectApiName": "Contact",
-				"currentRecordId": "{!data.PatrickGo.value}"
-			}
-		},
-		{
-			"testNumber": 5,
-			"conversationHistory": [],
-			"utterance": "Add call completed to the description",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": [
-				"ExtractFieldsAndValuesFromUserInput",
-				"Agentforce_Task_Create_and_Update"
-			],
-			"expectedResponse": "The description has been updated to include 'Call completed.'",
-			"contextVariables": {
-				"currentObjectApiName": "Task",
-				"currentRecordId": "{!data.Task.value}"
-			}
-		},
-		{
-			"testNumber": 6,
-			"conversationHistory": [],
-			"utterance": "Append 'call completed' to the description",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["Agentforce_Task_Create_and_Update"],
-			"expectedResponse": "The description has been updated to include 'Call completed.' ",
-			"contextVariables": {
-				"currentObjectApiName": "Task",
-				"currentRecordId": "{!data.Task.value}"
-			}
-		},
-		{
-			"testNumber": 7,
-			"conversationHistory": [
-				"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
-				"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
-			],
-			"utterance": "Create a task to follow up with Patrick Go, due by Friday. Set a reminder on Thursday at 11 am Pacific Time.",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": [
-				"GetActivityDetails",
-				"Agentforce_Task_Create_and_Update"
-			],
-			"expectedResponse": "The follow-up task with Patrick Go has been successfully created. Subject: Follow up with Patrick Go, Due Date: September 19, 2025, Reminder Date Time : 9/18/2025 6:00 PM"
-		},
-		{
-			"testNumber": 8,
-			"conversationHistory": [
-				"Find Claire Dufur from Sanford Health account",
-				"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}"
-			],
-			"utterance": "Create a Webcast meeting from 2pm tomorrow for an hour with Claire Dufur at Sanford Health",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["Agentforce_Event_Create_and_Update"],
-			"expectedResponse": "The Webcast meeting has been successfully scheduled."
-		},
-		{
-			"testNumber": 9,
-			"conversationHistory": [
-				"Create a Webcast meeting from 2pm tomorrow for an hour with Claire Dufur at Sanford Health",
-				"{!data.Webcast.pair}"
-			],
-			"utterance": "Update the location to Online",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["Agentforce_Event_Create_and_Update"],
-			"expectedResponse": "The location has been updated to 'Online'."
-		},
-		{
-			"testNumber": 10,
-			"conversationHistory": [
-				"Create a Webcast meeting from 2pm tomorrow for an hour with Claire Dufur at Sanford Health",
-				"{!data.Webcast.pair}"
-			],
-			"utterance": "Update the description to prepare the meeting agenda",
-			"expectedTopic": "Activity_Management",
-			"expectedActions": ["Agentforce_Event_Create_and_Update"],
-			"expectedResponse": "The description has been updated to 'Prepare the meeting agenda'."
-		}
+	"conversations": [
+		[
+			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
+			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}"
+		],
+
+		[
+			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
+			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}"
+		],
+		[
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+			"{!data.Webcast.pair}"
+		],
+		[
+			"Find {!data.PatrickGo.key} from {!data.YourMainLab.key} account",
+			"{!data.PatrickGo.pair} is associated with {!data.YourMainLab.pair}",
+			"Find {!data.ClaireDufur.key} from {!data.SanfordHealth.key} account",
+			"{!data.ClaireDufur.pair} is associated with {!data.SanfordHealth.pair}",
+			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.ClaireDufur.key} at {!data.SanfordHealth.key}",
+			"{!data.Webcast.pair}"
+		]
 	]
 }
