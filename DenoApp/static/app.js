@@ -14,6 +14,10 @@ class JsonDataEditor {
 		this.currentPanel = "data"; // Track current panel (data or conversations)
 		this.isInitialized = false; // Track if app has been initialized
 
+		// Debouncing setup
+		this.debounceTimeout = null;
+		this.pendingConversations = new Set(); // Track which conversations have pending processing
+
 		this.initializeEventListeners();
 		this.setupBeforeUnloadWarning();
 		this.showInitialState();
@@ -1145,9 +1149,14 @@ class JsonDataEditor {
 	}
 
 	handleMessageChange(conversationKey, messageIndex, value) {
+		// Save data immediately (no debouncing for data saving)
 		this.jsonData.conversations[conversationKey][messageIndex] = value;
-		this.processConversations();
 		this.markAsChanged(); // Mark as changed after message content change
+
+		// Use debounced processing for the expensive operation
+		this.debouncedProcessConversations(conversationKey);
+
+		// Validate input immediately (no debouncing for validation)
 		this.validateAndUpdateMessageInput(
 			conversationKey,
 			messageIndex,
@@ -1184,18 +1193,27 @@ class JsonDataEditor {
 	}
 
 	validateMergeFieldsDetailed(message) {
-		if (!message || !this.jsonData.data) {
-			return { hasErrors: false, errorMessage: "" };
+		// Check if message is null, undefined, or empty
+		if (!message) {
+			return {
+				hasErrors: true,
+				errorMessage:
+					"Message cannot be blank. Please enter at least one non-whitespace character."
+			};
 		}
 
 		// Check if message is blank or contains only whitespace
 		if (message.trim().length === 0) {
 			return {
 				hasErrors: true,
-				errors: [
+				errorMessage:
 					"Message cannot be blank. Please enter at least one non-whitespace character."
-				]
 			};
+		}
+
+		// Check if data is available for merge field validation
+		if (!this.jsonData.data) {
+			return { hasErrors: false, errorMessage: "" };
 		}
 
 		const availableKeys = Object.keys(this.jsonData.data);
@@ -1559,8 +1577,50 @@ class JsonDataEditor {
 
 			this.hideLoadingSpinner();
 			this.updateConversationOutputs();
+			this.clearPendingStates();
 			this.isLoading = false;
 		}, 100);
+	}
+
+	// Debounced version of processConversations
+	debouncedProcessConversations(conversationKey) {
+		// Clear any existing timeout
+		if (this.debounceTimeout) {
+			clearTimeout(this.debounceTimeout);
+		}
+
+		// Add this conversation to pending set and show visual state
+		this.pendingConversations.add(conversationKey);
+		this.showPendingState(conversationKey);
+
+		// Set new timeout
+		this.debounceTimeout = setTimeout(() => {
+			this.processConversations();
+		}, 300); // 300ms debounce delay
+	}
+
+	// Show pending state for a specific conversation
+	showPendingState(conversationKey) {
+		const outputElement = document.querySelector(
+			`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
+		);
+		if (outputElement) {
+			outputElement.style.backgroundColor = "#fff3cd"; // Light yellow (pending)
+			outputElement.style.transition = "background-color 0.2s ease";
+		}
+	}
+
+	// Clear pending states for all conversations and set final state
+	clearPendingStates() {
+		this.pendingConversations.forEach((conversationKey) => {
+			const outputElement = document.querySelector(
+				`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
+			);
+			if (outputElement) {
+				outputElement.style.backgroundColor = "#d4edda"; // Light green (final/processed)
+			}
+		});
+		this.pendingConversations.clear();
 	}
 
 	updateConversationOutputs() {

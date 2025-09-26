@@ -450,6 +450,34 @@ body {
 	color: white;
 }
 
+/* Download button with unsaved changes */
+.file-operations-group .btn.btn-danger {
+	background: #dc3545;
+	border-color: #dc3545;
+	color: white;
+	animation: pulse-red 2s infinite;
+}
+
+.file-operations-group .btn.btn-danger:hover {
+	background: #c82333;
+	border-color: #bd2130;
+	color: white;
+}
+
+@keyframes pulse-red {
+	0% {
+		box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+	}
+
+	70% {
+		box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+	}
+
+	100% {
+		box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+	}
+}
+
 /* Panel Navigation Button Group */
 .panel-navigation-group {
 	background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
