@@ -15,7 +15,7 @@ export const APP_CONFIG = {
 
 	// UI Configuration
 	TOAST_DURATION: 5000, // 5 seconds
-	DEBOUNCE_DELAY: 300, // 300ms (removed as per requirements)
+	DEBOUNCE_DELAY: 50, // 50m
 	ANIMATION_DURATION: 300, // 300ms
 
 	// Logging Configuration

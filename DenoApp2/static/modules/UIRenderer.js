@@ -316,8 +316,14 @@ export class UIRenderer {
 		const structureValidation =
 			validationManager.validateConversationStructure(conversation);
 		const hasStructureError = structureValidation.hasErrors;
+
+		// Get current message values from DOM to avoid stale data issues
+		const currentMessages = this.getCurrentMessageValues(
+			conversationKey,
+			conversation
+		);
 		const hasMergeFieldErrors =
-			validationManager.hasMergeFieldErrors(conversation);
+			validationManager.hasMergeFieldErrors(currentMessages);
 		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
 			processedConversation
 		);
@@ -644,6 +650,124 @@ export class UIRenderer {
 	}
 
 	/**
+	 * Update conversation output styling based on validation state
+	 * @param {string} conversationKey - Conversation key
+	 * @param {ValidationManager} validationManager - Validation manager instance
+	 */
+	updateConversationOutputStyling(conversationKey, validationManager) {
+		// Find the conversation element
+		const conversationElement = querySelector(
+			`[data-key="${conversationKey}"]`
+		);
+		if (!conversationElement) return;
+
+		// Get current conversation data
+		const conversation =
+			window.app?.dataManager?.getConversation(conversationKey);
+		const processedConversation =
+			window.app?.dataManager?.getProcessedConversation(conversationKey);
+		if (!conversation || !processedConversation) return;
+
+		// Check for validation errors using current DOM values
+		const structureValidation =
+			validationManager.validateConversationStructure(conversation);
+		const hasStructureError = structureValidation.hasErrors;
+
+		const currentMessages = this.getCurrentMessageValues(
+			conversationKey,
+			conversation
+		);
+		const hasMergeFieldErrors =
+			validationManager.hasMergeFieldErrors(currentMessages);
+		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+			processedConversation
+		);
+		const hasAnyErrors =
+			hasStructureError || hasUnresolvedFields || hasMergeFieldErrors;
+
+		// Update output element styling
+		const outputElement = conversationElement.querySelector(
+			".conversation-json, .conversation-json-error"
+		);
+		if (outputElement) {
+			if (hasAnyErrors) {
+				outputElement.className = APP_CONFIG.CSS_CLASSES.JSON_ERROR;
+			} else {
+				outputElement.className = "conversation-json";
+			}
+		}
+	}
+
+	/**
+	 * Update conversation header validation state
+	 * @param {string} conversationKey - Conversation key
+	 * @param {ValidationManager} validationManager - Validation manager instance
+	 */
+	updateConversationHeaderValidation(conversationKey, validationManager) {
+		// Find the conversation element
+		const conversationElement = querySelector(
+			`[data-key="${conversationKey}"]`
+		);
+		if (!conversationElement) return;
+
+		// Get current conversation data
+		const conversation =
+			window.app?.dataManager?.getConversation(conversationKey);
+		const processedConversation =
+			window.app?.dataManager?.getProcessedConversation(conversationKey);
+		if (!conversation || !processedConversation) return;
+
+		// Check for validation errors using current DOM values
+		const structureValidation =
+			validationManager.validateConversationStructure(conversation);
+		const hasStructureError = structureValidation.hasErrors;
+
+		const currentMessages = this.getCurrentMessageValues(
+			conversationKey,
+			conversation
+		);
+		const hasMergeFieldErrors =
+			validationManager.hasMergeFieldErrors(currentMessages);
+		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+			processedConversation
+		);
+		const hasAnyErrors =
+			hasStructureError || hasUnresolvedFields || hasMergeFieldErrors;
+
+		// Update title display
+		const titleDisplay = conversationElement.querySelector(
+			".conversation-title-display"
+		);
+		if (titleDisplay) {
+			if (hasAnyErrors) {
+				titleDisplay.classList.add(
+					APP_CONFIG.CSS_CLASSES.CONVERSATION_ERROR
+				);
+			} else {
+				titleDisplay.classList.remove(
+					APP_CONFIG.CSS_CLASSES.CONVERSATION_ERROR
+				);
+			}
+		}
+
+		// Update title input if editing
+		const titleInput = conversationElement.querySelector(
+			".conversation-title-input"
+		);
+		if (titleInput) {
+			if (hasAnyErrors) {
+				titleInput.classList.add(
+					APP_CONFIG.CSS_CLASSES.CONVERSATION_ERROR
+				);
+			} else {
+				titleInput.classList.remove(
+					APP_CONFIG.CSS_CLASSES.CONVERSATION_ERROR
+				);
+			}
+		}
+	}
+
+	/**
 	 * Directly update conversation output text without re-rendering (for real-time updates)
 	 * @param {string} conversationKey - Conversation key
 	 */
@@ -771,6 +895,18 @@ export class UIRenderer {
 			hasUnresolvedFields,
 			outputJson
 		});
+
+		// Also update the header validation state and output styling
+		if (window.app && window.app.validationManager) {
+			this.updateConversationHeaderValidation(
+				conversationKey,
+				window.app.validationManager
+			);
+			this.updateConversationOutputStyling(
+				conversationKey,
+				window.app.validationManager
+			);
+		}
 	}
 
 	/**
@@ -815,9 +951,12 @@ export class UIRenderer {
 		console.log("createMessageInput validation:", {
 			textareaId,
 			message,
+			messageType: typeof message,
+			messageLength: message ? message.length : 0,
 			hasErrors,
 			errorMessage: validationResult.errorMessage,
-			shouldShow: hasErrors ? "block" : "none"
+			shouldShow: hasErrors ? "block" : "none",
+			validationResult
 		});
 		const textareaAttributes = {
 			id: textareaId,
@@ -837,8 +976,27 @@ export class UIRenderer {
 		const errorText = createElement("div", {
 			className: "message-error-text",
 			textContent: validationResult.errorMessage,
-			style: { display: hasErrors ? "block" : "none" }
+			style: {
+				display:
+					hasErrors && validationResult.errorMessage
+						? "block"
+						: "none"
+			}
 		});
+
+		// Fallback: If there's an error message but display is none, force it to show
+		// This handles cases where the initial validation might have missed something
+		if (
+			validationResult.errorMessage &&
+			validationResult.errorMessage.trim() !== ""
+		) {
+			console.log("Error message present, ensuring it's displayed:", {
+				textareaId,
+				errorMessage: validationResult.errorMessage,
+				currentDisplay: errorText.style.display
+			});
+			errorText.style.display = "block";
+		}
 
 		// Add real-time validation and debounced data update on input
 		let debounceTimeout = null;
@@ -900,7 +1058,7 @@ export class UIRenderer {
 						}
 					);
 				}
-			}, 300);
+			}, APP_CONFIG.DEBOUNCE_DELAY);
 		});
 
 		appendChild(inputDiv, textarea);
@@ -1103,6 +1261,31 @@ export class UIRenderer {
 			}
 			return false;
 		});
+	}
+
+	/**
+	 * Get current message values from DOM inputs to avoid stale data
+	 * @param {string} conversationKey - Conversation key
+	 * @param {Array} conversation - Original conversation data
+	 * @returns {Array} - Array of current message values from DOM
+	 */
+	getCurrentMessageValues(conversationKey, conversation) {
+		const currentMessages = [];
+
+		for (let i = 0; i < conversation.length; i++) {
+			const textareaId = `message-${conversationKey}-${i}`;
+			const textarea = document.getElementById(textareaId);
+
+			if (textarea) {
+				// Get current value from DOM
+				currentMessages.push(textarea.value);
+			} else {
+				// Fallback to stored value if DOM element not found
+				currentMessages.push(conversation[i]);
+			}
+		}
+
+		return currentMessages;
 	}
 
 	/**

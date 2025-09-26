@@ -20,15 +20,33 @@ export class FileHandler {
 		const fileInput2 = getElementById(APP_CONFIG.ELEMENT_IDS.FILE_INPUT_2);
 
 		if (fileInput) {
-			fileInput.addEventListener("change", (e) =>
-				this.handleFileUpload(e)
-			);
+			fileInput.addEventListener("change", (e) => {
+				// Forward to StateManager if available
+				if (window.app && window.app.handleFileUpload) {
+					window.app.handleFileUpload(e);
+				} else {
+					// Fallback: just log the event
+					console.log(
+						"File selected but StateManager not available:",
+						e.target.files[0]
+					);
+				}
+			});
 		}
 
 		if (fileInput2) {
-			fileInput2.addEventListener("change", (e) =>
-				this.handleFileUpload(e)
-			);
+			fileInput2.addEventListener("change", (e) => {
+				// Forward to StateManager if available
+				if (window.app && window.app.handleFileUpload) {
+					window.app.handleFileUpload(e);
+				} else {
+					// Fallback: just log the event
+					console.log(
+						"File selected but StateManager not available:",
+						e.target.files[0]
+					);
+				}
+			});
 		}
 	}
 

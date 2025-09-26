@@ -386,7 +386,8 @@ export class StateManager {
 		logger.userAction("Start New Project", { action: "startNewProject" });
 
 		this.dataManager.reset();
-		this.validationManager.updateDataKeys([]);
+		// Update data keys with the actual keys from the reset data
+		this.validationManager.updateDataKeys(this.dataManager.getDataKeys());
 		this.hasUnsavedChanges = false;
 		this.showFullApp();
 		this.markAsSaved();

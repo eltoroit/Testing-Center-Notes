@@ -307,7 +307,8 @@ export class ValidationManager {
 	 */
 	hasMergeFieldErrors(conversation) {
 		return conversation.some(
-			(message) => this.validateMergeFields(message).hasErrors
+			(message) =>
+				this.validateMergeFields(message.message || message).hasErrors
 		);
 	}
 
