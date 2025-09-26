@@ -693,14 +693,25 @@ class JsonDataEditor {
 		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
 			processedConversation
 		);
-		const outputClass = hasUnresolvedFields
-			? "conversation-json-error"
-			: "conversation-json";
 
 		// Check conversation structure validation
 		const structureValidation =
 			this.validateConversationStructure(conversationKey);
 		const hasStructureError = structureValidation.hasErrors;
+
+		const outputClass =
+			hasUnresolvedFields || hasStructureError
+				? "conversation-json-error"
+				: "conversation-json";
+
+		// Check if any messages have merge field errors
+		const hasMergeFieldErrors = conversation.some(
+			(message) => this.validateMergeFieldsDetailed(message).hasErrors
+		);
+
+		// Determine if conversation has any errors
+		const hasAnyErrors =
+			hasStructureError || hasUnresolvedFields || hasMergeFieldErrors;
 
 		const isEditingTitle = this.editingConversationKey === conversationKey;
 
@@ -709,8 +720,16 @@ class JsonDataEditor {
                 <div class="conversation-title">
                     ${
 						isEditingTitle
-							? `<input type="text" value="${conversationKey}" class="conversation-title-input" data-conversation-key="${conversationKey}">`
-							: `<h3 class="conversation-title-display" data-conversation-key="${conversationKey}">${conversationKey}</h3>`
+							? `<input type="text" value="${conversationKey}" class="conversation-title-input ${
+									hasAnyErrors
+										? "conversation-title-error"
+										: ""
+							  }" data-conversation-key="${conversationKey}">`
+							: `<h3 class="conversation-title-display ${
+									hasAnyErrors
+										? "conversation-title-error"
+										: ""
+							  }" data-conversation-key="${conversationKey}">${conversationKey}</h3>`
 					}
                     ${
 						isEditingTitle
@@ -1183,17 +1202,31 @@ class JsonDataEditor {
 
 		console.log("\nTesting conversation structure validation:");
 		const structureTestCases = [
-			{ messages: [], shouldHaveError: false }, // Empty conversation
-			{ messages: ["User message"], shouldHaveError: true }, // 1 message (odd)
+			{
+				messages: [],
+				shouldHaveError: false,
+				description: "Empty conversation"
+			},
+			{
+				messages: ["User message"],
+				shouldHaveError: true,
+				description: "1 message (odd)"
+			},
 			{
 				messages: ["User message", "Agent message"],
-				shouldHaveError: false
-			}, // 2 messages (even)
-			{ messages: ["User", "Agent", "User"], shouldHaveError: true }, // 3 messages (odd)
+				shouldHaveError: false,
+				description: "2 messages (even)"
+			},
+			{
+				messages: ["User", "Agent", "User"],
+				shouldHaveError: true,
+				description: "3 messages (odd)"
+			},
 			{
 				messages: ["User", "Agent", "User", "Agent"],
-				shouldHaveError: false
-			} // 4 messages (even)
+				shouldHaveError: false,
+				description: "4 messages (even)"
+			}
 		];
 
 		structureTestCases.forEach((testCase, index) => {
@@ -1206,8 +1239,8 @@ class JsonDataEditor {
 			const passed = result.hasErrors === testCase.shouldHaveError;
 			console.log(
 				`Structure Test ${index + 1}: ${passed ? "PASS" : "FAIL"} - ${
-					testCase.messages.length
-				} messages - Expected error: ${
+					testCase.description
+				} (${testCase.messages.length} messages) - Expected error: ${
 					testCase.shouldHaveError
 				}, Got error: ${result.hasErrors}`
 			);
@@ -1333,6 +1366,9 @@ class JsonDataEditor {
 			const hasUnresolvedFields = this.hasUnresolvedMergeFields(
 				processedConversation
 			);
+			const hasStructureError =
+				this.validateConversationStructure(conversationKey).hasErrors;
+			const hasAnyOutputErrors = hasUnresolvedFields || hasStructureError;
 
 			const outputElement = document.querySelector(
 				`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
@@ -1340,10 +1376,18 @@ class JsonDataEditor {
 			if (outputElement) {
 				outputElement.textContent = outputJson;
 
-				// Update the class and tooltip based on unresolved fields
-				if (hasUnresolvedFields) {
+				// Update the class and tooltip based on errors
+				if (hasAnyOutputErrors) {
 					outputElement.className = "conversation-json-error";
-					outputElement.title = "Contains unresolved merge fields";
+					if (hasUnresolvedFields && hasStructureError) {
+						outputElement.title =
+							"Contains unresolved merge fields and structure errors";
+					} else if (hasUnresolvedFields) {
+						outputElement.title =
+							"Contains unresolved merge fields";
+					} else if (hasStructureError) {
+						outputElement.title = "Contains structure errors";
+					}
 				} else {
 					outputElement.className = "conversation-json";
 					outputElement.title = "";
@@ -1355,8 +1399,8 @@ class JsonDataEditor {
 				`[data-key="${conversationKey}"] .output-header h4`
 			);
 			if (headerElement) {
-				if (hasUnresolvedFields) {
-					headerElement.innerHTML = `Output (JSON) <span class="error-indicator" title="Contains unresolved merge fields"><i class="fas fa-exclamation-triangle"></i></span>`;
+				if (hasAnyOutputErrors) {
+					headerElement.innerHTML = `Output (JSON) <span class="error-indicator" title="Contains errors"><i class="fas fa-exclamation-triangle"></i></span>`;
 				} else {
 					headerElement.innerHTML = "Output (JSON)";
 				}

@@ -681,6 +681,11 @@ body {
 	box-shadow: 0 2px 4px rgba(220, 53, 69, 0.1);
 }
 
+.conversation-title-error {
+	color: #dc3545 !important;
+	font-weight: 600 !important;
+}
+
 .messages-list {
 	display: flex;
 	flex-direction: column;
