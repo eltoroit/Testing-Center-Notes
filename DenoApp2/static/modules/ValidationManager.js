@@ -46,10 +46,10 @@ export class ValidationManager {
 			};
 		}
 
-		// Check if data is available for merge field validation
-		if (!this.dataKeys || this.dataKeys.length === 0) {
-			return { hasErrors: false, errorMessage: "" };
-		}
+		// // Check if data is available for merge field validation
+		// if (!this.dataKeys || this.dataKeys.length === 0) {
+		// 	return { hasErrors: false, errorMessage: "" };
+		// }
 
 		const errors = [];
 
@@ -74,12 +74,18 @@ export class ValidationManager {
 				const fieldName = validMatch[2];
 
 				// Check if the key exists in our data
-				if (!this.dataKeys.includes(keyName)) {
+				if (this.dataKeys.length === 0) {
 					errors.push(
-						`Data key "${keyName}" not found. Available keys: ${this.dataKeys.join(
-							", "
-						)}`
+						`No data available. Please add some data to get started.`
 					);
+				} else {
+					if (!this.dataKeys.includes(keyName)) {
+						errors.push(
+							`Data key "${keyName}" not found. Available keys: ${this.dataKeys.join(
+								", "
+							)}`
+						);
+					}
 				}
 
 				// Check if field type is valid
