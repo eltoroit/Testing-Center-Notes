@@ -32,7 +32,7 @@ class JsonDataEditor {
 		document
 			.getElementById("uploadBtn")
 			.addEventListener("click", () =>
-				document.getElementById("fileInput").click()
+				this.handleUploadButtonClick("fileInput")
 			);
 
 		document
@@ -58,7 +58,7 @@ class JsonDataEditor {
 		}
 		if (uploadBtn2) {
 			uploadBtn2.addEventListener("click", () =>
-				document.getElementById("fileInput2").click()
+				this.handleUploadButtonClick("fileInput2")
 			);
 		}
 		if (initializeProjectBtn) {
@@ -251,25 +251,28 @@ class JsonDataEditor {
 		}
 	}
 
+	handleUploadButtonClick(fileInputId) {
+		// Check if there's existing data and ask for confirmation BEFORE opening file dialog
+		const hasExistingData =
+			Object.keys(this.jsonData.data).length > 0 ||
+			Object.keys(this.jsonData.conversations).length > 0;
+
+		if (hasExistingData) {
+			const confirmed = confirm(
+				"This will replace all existing data. Are you sure you want to continue?"
+			);
+			if (!confirmed) {
+				return; // User cancelled, don't open file dialog
+			}
+		}
+
+		// User confirmed or no existing data, open file dialog
+		document.getElementById(fileInputId).click();
+	}
+
 	handleFileUpload(event) {
 		const file = event.target.files[0];
 		if (file && file.type === "application/json") {
-			// Check if there's existing data and ask for confirmation
-			const hasExistingData =
-				Object.keys(this.jsonData.data).length > 0 ||
-				Object.keys(this.jsonData.conversations).length > 0;
-
-			if (hasExistingData) {
-				const confirmed = confirm(
-					"This will replace all existing data. Are you sure you want to continue?"
-				);
-				if (!confirmed) {
-					// Reset the file input so it can be used again
-					event.target.value = "";
-					return;
-				}
-			}
-
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				try {
@@ -1132,6 +1135,7 @@ class JsonDataEditor {
 		this.jsonData.conversations[conversationKey].push("");
 		this.renderConversations();
 		this.processConversations();
+		this.updateConversationErrorStates(conversationKey);
 		this.markAsChanged(); // Mark as changed after adding message
 	}
 
@@ -1143,6 +1147,7 @@ class JsonDataEditor {
 			);
 			this.renderConversations();
 			this.processConversations();
+			this.updateConversationErrorStates(conversationKey);
 			this.markAsChanged(); // Mark as changed after deleting message
 			this.showToast("Message deleted", "success");
 		}
@@ -1162,6 +1167,9 @@ class JsonDataEditor {
 			messageIndex,
 			value
 		);
+
+		// Update conversation title and output colors immediately
+		this.updateConversationErrorStates(conversationKey);
 	}
 
 	validateMergeFields(message) {
@@ -1511,6 +1519,74 @@ class JsonDataEditor {
 		}
 	}
 
+	// Update conversation title and output colors based on current error states
+	updateConversationErrorStates(conversationKey) {
+		const conversation = this.jsonData.conversations[conversationKey];
+		if (!conversation) return;
+
+		// Check for merge field errors in messages
+		const hasMergeFieldErrors = conversation.some(
+			(message) => this.validateMergeFieldsDetailed(message).hasErrors
+		);
+
+		// Check for structure errors
+		const hasStructureError =
+			this.validateConversationStructure(conversationKey).hasErrors;
+
+		// Check for unresolved merge fields in processed output
+		const processedConversation =
+			this.processedConversations[conversationKey] || [];
+		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+			processedConversation
+		);
+
+		// Determine if conversation has any errors
+		const hasAnyErrors =
+			hasStructureError || hasUnresolvedFields || hasMergeFieldErrors;
+
+		// Update conversation title display
+		const titleDisplayElement = document.querySelector(
+			`[data-key="${conversationKey}"] .conversation-title-display`
+		);
+		if (titleDisplayElement) {
+			if (hasAnyErrors) {
+				titleDisplayElement.classList.add("conversation-title-error");
+			} else {
+				titleDisplayElement.classList.remove(
+					"conversation-title-error"
+				);
+			}
+		}
+
+		// Update conversation title input (if editing)
+		const titleInputElement = document.querySelector(
+			`[data-key="${conversationKey}"] .conversation-title-input`
+		);
+		if (titleInputElement) {
+			if (hasAnyErrors) {
+				titleInputElement.classList.add("conversation-title-error");
+			} else {
+				titleInputElement.classList.remove("conversation-title-error");
+			}
+		}
+
+		// Update output element classes
+		const outputElement = document.querySelector(
+			`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
+		);
+		if (outputElement) {
+			// Remove pending class if it exists (it will be re-added by debouncing if needed)
+			outputElement.classList.remove("conversation-json-pending");
+
+			// Set appropriate class based on errors
+			if (hasAnyErrors) {
+				outputElement.className = "conversation-json-error";
+			} else {
+				outputElement.className = "conversation-json";
+			}
+		}
+	}
+
 	hasUnresolvedMergeFields(processedConversation) {
 		if (!processedConversation || !Array.isArray(processedConversation)) {
 			return false;
@@ -1545,7 +1621,6 @@ class JsonDataEditor {
 	// Merge Field Processing
 	processConversations() {
 		this.isLoading = true;
-		this.showLoadingSpinner();
 
 		// Simulate processing delay for better UX
 		setTimeout(() => {
@@ -1575,7 +1650,6 @@ class JsonDataEditor {
 				}
 			);
 
-			this.hideLoadingSpinner();
 			this.updateConversationOutputs();
 			this.clearPendingStates();
 			this.isLoading = false;
@@ -1596,7 +1670,7 @@ class JsonDataEditor {
 		// Set new timeout
 		this.debounceTimeout = setTimeout(() => {
 			this.processConversations();
-		}, 300); // 300ms debounce delay
+		}, 0); // 300ms debounce delay
 	}
 
 	// Show pending state for a specific conversation
@@ -1605,8 +1679,8 @@ class JsonDataEditor {
 			`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
 		);
 		if (outputElement) {
-			outputElement.style.backgroundColor = "#fff3cd"; // Light yellow (pending)
-			outputElement.style.transition = "background-color 0.2s ease";
+			// Add a pending class instead of inline styles
+			outputElement.classList.add("conversation-json-pending");
 		}
 	}
 
@@ -1617,10 +1691,47 @@ class JsonDataEditor {
 				`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
 			);
 			if (outputElement) {
-				outputElement.style.backgroundColor = "#d4edda"; // Light green (final/processed)
+				// Remove pending class
+				outputElement.classList.remove("conversation-json-pending");
+
+				// Set the correct final class based on current error state
+				this.updateOutputElementClass(conversationKey, outputElement);
 			}
 		});
 		this.pendingConversations.clear();
+	}
+
+	// Update only the output element class based on error state
+	updateOutputElementClass(conversationKey, outputElement) {
+		const conversation = this.jsonData.conversations[conversationKey];
+		if (!conversation) return;
+
+		// Check for merge field errors in messages
+		const hasMergeFieldErrors = conversation.some(
+			(message) => this.validateMergeFieldsDetailed(message).hasErrors
+		);
+
+		// Check for structure errors
+		const hasStructureError =
+			this.validateConversationStructure(conversationKey).hasErrors;
+
+		// Check for unresolved merge fields in processed output
+		const processedConversation =
+			this.processedConversations[conversationKey] || [];
+		const hasUnresolvedFields = this.hasUnresolvedMergeFields(
+			processedConversation
+		);
+
+		// Determine if conversation has any errors
+		const hasAnyErrors =
+			hasStructureError || hasUnresolvedFields || hasMergeFieldErrors;
+
+		// Set appropriate class based on errors
+		if (hasAnyErrors) {
+			outputElement.className = "conversation-json-error";
+		} else {
+			outputElement.className = "conversation-json";
+		}
 	}
 
 	updateConversationOutputs() {
@@ -1634,7 +1745,16 @@ class JsonDataEditor {
 			);
 			const hasStructureError =
 				this.validateConversationStructure(conversationKey).hasErrors;
-			const hasAnyOutputErrors = hasUnresolvedFields || hasStructureError;
+
+			// Check for merge field errors in messages (including blank messages)
+			const conversationMessages =
+				this.jsonData.conversations[conversationKey];
+			const hasMergeFieldErrors = conversationMessages.some(
+				(message) => this.validateMergeFieldsDetailed(message).hasErrors
+			);
+
+			const hasAnyOutputErrors =
+				hasUnresolvedFields || hasStructureError || hasMergeFieldErrors;
 
 			const outputElement = document.querySelector(
 				`[data-key="${conversationKey}"] .conversation-json, [data-key="${conversationKey}"] .conversation-json-error`
@@ -1669,6 +1789,47 @@ class JsonDataEditor {
 					headerElement.innerHTML = `Output (JSON) <span class="error-indicator" title="Contains errors"><i class="fas fa-exclamation-triangle"></i></span>`;
 				} else {
 					headerElement.innerHTML = "Output (JSON)";
+				}
+			}
+
+			// Update conversation title styling based on errors
+			const conversationForTitle =
+				this.jsonData.conversations[conversationKey];
+			const hasMergeFieldErrorsForTitle = conversationForTitle.some(
+				(message) => this.validateMergeFieldsDetailed(message).hasErrors
+			);
+			const hasAnyErrors =
+				hasStructureError ||
+				hasUnresolvedFields ||
+				hasMergeFieldErrorsForTitle;
+
+			// Update conversation title display
+			const titleDisplayElement = document.querySelector(
+				`[data-key="${conversationKey}"] .conversation-title-display`
+			);
+			if (titleDisplayElement) {
+				if (hasAnyErrors) {
+					titleDisplayElement.classList.add(
+						"conversation-title-error"
+					);
+				} else {
+					titleDisplayElement.classList.remove(
+						"conversation-title-error"
+					);
+				}
+			}
+
+			// Update conversation title input (if editing)
+			const titleInputElement = document.querySelector(
+				`[data-key="${conversationKey}"] .conversation-title-input`
+			);
+			if (titleInputElement) {
+				if (hasAnyErrors) {
+					titleInputElement.classList.add("conversation-title-error");
+				} else {
+					titleInputElement.classList.remove(
+						"conversation-title-error"
+					);
 				}
 			}
 		});
@@ -1724,14 +1885,6 @@ class JsonDataEditor {
 		} catch (error) {
 			return `{!data.${fieldPath}}`; // Return original if error
 		}
-	}
-
-	showLoadingSpinner() {
-		document.getElementById("loadingSpinner").classList.add("show");
-	}
-
-	hideLoadingSpinner() {
-		document.getElementById("loadingSpinner").classList.remove("show");
 	}
 
 	showToast(message, type = "info") {
