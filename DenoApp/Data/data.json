@@ -27,6 +27,16 @@
 			"{!data.Claire Dufur.pair} is associated with {!data.Sanford Health.pair}",
 			"Create a Webcast meeting from 2pm tomorrow for an hour with {!data.Claire Dufur.key} at {!data.Sanford Health.key}",
 			"{!data.Webcast.pair}"
+		],
+		"Test Error Messages": [
+			"Valid: {!data.Patrick Go.key}",
+			"Missing !: {data.Patrick Go.key}",
+			"Missing opening brace: !data.Patrick Go.key}",
+			"Missing closing brace: {!data.Patrick Go.key",
+			"Invalid key: {!data.NonExistentKey.key}",
+			"Invalid field: {!data.Patrick Go.invalid}",
+			"Random text: {pizza}",
+			"Wrong format: data.Patrick Go.key"
 		]
 	},
 	"processedConversations": {

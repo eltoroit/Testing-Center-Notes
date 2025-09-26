@@ -11,8 +11,10 @@ class JsonDataEditor {
 		this.editingDataId = null;
 		this.editingConversationKey = null;
 		this.editingMessageIndex = null;
+		this.hasUnsavedChanges = false;
 
 		this.initializeEventListeners();
+		this.setupBeforeUnloadWarning();
 	}
 
 	initializeEventListeners() {
@@ -76,6 +78,48 @@ class JsonDataEditor {
 		}
 	}
 
+	setupBeforeUnloadWarning() {
+		window.addEventListener("beforeunload", (event) => {
+			if (this.hasUnsavedChanges) {
+				// Standard way to show the warning
+				event.preventDefault();
+				event.returnValue =
+					"You have unsaved changes. Are you sure you want to leave? Make sure to download your JSON file to save your work.";
+				return event.returnValue;
+			}
+		});
+	}
+
+	markAsChanged() {
+		this.hasUnsavedChanges = true;
+		this.updateDownloadButton();
+	}
+
+	markAsSaved() {
+		this.hasUnsavedChanges = false;
+		this.updateDownloadButton();
+	}
+
+	updateDownloadButton() {
+		const downloadBtn = document.getElementById("downloadBtn");
+		if (downloadBtn) {
+			if (this.hasUnsavedChanges) {
+				downloadBtn.classList.add("btn-danger");
+				downloadBtn.classList.remove("btn-primary");
+				downloadBtn.innerHTML =
+					'<i class="fas fa-download"></i> Download JSON <i class="fas fa-exclamation-triangle"></i>';
+				downloadBtn.title =
+					"You have unsaved changes! Download to save your work.";
+			} else {
+				downloadBtn.classList.add("btn-primary");
+				downloadBtn.classList.remove("btn-danger");
+				downloadBtn.innerHTML =
+					'<i class="fas fa-download"></i> Download JSON';
+				downloadBtn.title = "Download JSON file";
+			}
+		}
+	}
+
 	handleFileUpload(event) {
 		const file = event.target.files[0];
 		if (file && file.type === "application/json") {
@@ -112,6 +156,7 @@ class JsonDataEditor {
 					this.renderDataTable();
 					this.renderConversations();
 					this.processConversations();
+					this.markAsSaved(); // Mark as saved after successful upload
 					this.showToast("File uploaded successfully", "success");
 				} catch (error) {
 					this.showToast(
@@ -151,6 +196,7 @@ class JsonDataEditor {
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
 
+		this.markAsSaved(); // Mark as saved after successful download
 		this.showToast("File downloaded successfully", "success");
 	}
 
@@ -584,6 +630,7 @@ class JsonDataEditor {
 			this.editingDataId = null;
 			this.renderDataTable();
 			this.processConversations();
+			this.markAsChanged(); // Mark as changed after data modification
 			this.showToast("Data saved successfully", "success");
 		} else {
 			this.showToast("Please fill in key and value", "error");
@@ -603,6 +650,7 @@ class JsonDataEditor {
 			delete this.jsonData.data[key];
 			this.renderDataTable();
 			this.processConversations();
+			this.markAsChanged(); // Mark as changed after data deletion
 			this.showToast("Data entry deleted", "success");
 		}
 	}
@@ -742,10 +790,11 @@ class JsonDataEditor {
 
 	createMessageInput(conversationKey, messageIndex, message) {
 		const role = this.getRoleForMessage(messageIndex);
-		const hasErrors = this.validateMergeFields(message);
+		const validationResult = this.validateMergeFieldsDetailed(message);
+		const hasErrors = validationResult.hasErrors;
 		const errorClass = hasErrors ? "message-textarea-error" : "";
 		const errorTooltip = hasErrors
-			? 'title="Invalid merge field detected. Check that data keys match exactly (including spaces)."'
+			? `title="${validationResult.errorMessage}"`
 			: "";
 
 		return `
@@ -760,6 +809,9 @@ class JsonDataEditor {
                         placeholder="Enter ${role} message..."
                         ${errorTooltip}
                     >${message}</textarea>
+                    <div class="message-error-text" style="display: ${
+						hasErrors ? "block" : "none"
+					}">${validationResult.errorMessage}</div>
                 </div>
                 <div class="message-actions">
                     <button class="btn btn-sm btn-danger" onclick="app.deleteMessage('${conversationKey}', ${messageIndex})">
@@ -816,6 +868,7 @@ class JsonDataEditor {
 
 		this.editingConversationKey = null;
 		this.renderConversations();
+		this.markAsChanged(); // Mark as changed after title modification
 		this.showToast("Conversation title updated successfully", "success");
 	}
 
@@ -830,6 +883,7 @@ class JsonDataEditor {
 		this.jsonData.conversations[newKey] = [];
 		this.renderConversations();
 		this.processConversations();
+		this.markAsChanged(); // Mark as changed after adding conversation
 	}
 
 	cloneConversation(conversationKey) {
@@ -841,6 +895,7 @@ class JsonDataEditor {
 		this.jsonData.conversations[newKey] = originalConversation;
 		this.renderConversations();
 		this.processConversations();
+		this.markAsChanged(); // Mark as changed after cloning conversation
 		this.showToast("Conversation cloned successfully", "success");
 	}
 
@@ -848,6 +903,7 @@ class JsonDataEditor {
 		this.jsonData.conversations[conversationKey].push("");
 		this.renderConversations();
 		this.processConversations();
+		this.markAsChanged(); // Mark as changed after adding message
 	}
 
 	deleteMessage(conversationKey, messageIndex) {
@@ -858,6 +914,7 @@ class JsonDataEditor {
 			);
 			this.renderConversations();
 			this.processConversations();
+			this.markAsChanged(); // Mark as changed after deleting message
 			this.showToast("Message deleted", "success");
 		}
 	}
@@ -865,6 +922,7 @@ class JsonDataEditor {
 	handleMessageChange(conversationKey, messageIndex, value) {
 		this.jsonData.conversations[conversationKey][messageIndex] = value;
 		this.processConversations();
+		this.markAsChanged(); // Mark as changed after message content change
 		this.validateAndUpdateMessageInput(
 			conversationKey,
 			messageIndex,
@@ -900,20 +958,179 @@ class JsonDataEditor {
 		return false; // No errors found
 	}
 
+	validateMergeFieldsDetailed(message) {
+		if (!message || !this.jsonData.data) {
+			return { hasErrors: false, errorMessage: "" };
+		}
+
+		const availableKeys = Object.keys(this.jsonData.data);
+		const errors = [];
+
+		// First, find all potential merge field patterns (anything with braces)
+		const allBracePatterns = /\{[^}]*\}/g;
+		let braceMatch;
+		const foundPatterns = [];
+
+		while ((braceMatch = allBracePatterns.exec(message)) !== null) {
+			foundPatterns.push(braceMatch[0]);
+		}
+
+		// Check each found pattern
+		foundPatterns.forEach((pattern) => {
+			// Check for valid format: {!data.key.field}
+			const validPattern = /^\{!data\.([^.]+)\.([^}]+)\}$/;
+			const validMatch = pattern.match(validPattern);
+
+			if (validMatch) {
+				// Valid format, check if key and field are valid
+				const keyName = validMatch[1];
+				const fieldName = validMatch[2];
+
+				// Check if the key exists in our data
+				if (!availableKeys.includes(keyName)) {
+					errors.push(
+						`Data key "${keyName}" not found. Available keys: ${availableKeys.join(
+							", "
+						)}`
+					);
+				}
+
+				// Check if field type is valid
+				if (!["key", "value", "pair"].includes(fieldName)) {
+					errors.push(
+						`Invalid field type "${fieldName}". Use "key", "value", or "pair".`
+					);
+				}
+			} else {
+				// Invalid format, determine what's wrong
+				if (pattern.startsWith("{!data.")) {
+					// Starts correctly but has issues
+					if (!pattern.includes(".")) {
+						errors.push(
+							`Invalid merge field format "${pattern}". Use {!data.key.field} format.`
+						);
+					} else if (!pattern.endsWith("}")) {
+						errors.push(
+							`Missing closing brace '}'. Use {!data.key.field} format.`
+						);
+					} else {
+						errors.push(
+							`Invalid merge field format "${pattern}". Use {!data.key.field} format.`
+						);
+					}
+				} else if (pattern.startsWith("{data.")) {
+					// Missing exclamation mark
+					errors.push(
+						`Missing '!' in merge field. Use {!data.key.field} format.`
+					);
+				} else if (
+					pattern.includes("!data.") &&
+					!pattern.startsWith("{")
+				) {
+					// Missing opening brace
+					errors.push(
+						`Missing opening brace '{'. Use {!data.key.field} format.`
+					);
+				} else if (pattern.includes("data.")) {
+					// Has data but wrong format
+					errors.push(
+						`Invalid merge field format "${pattern}". Use {!data.key.field} format.`
+					);
+				} else {
+					// Other invalid merge field
+					errors.push(
+						`Invalid merge field "${pattern}". Use {!data.key.field} format.`
+					);
+				}
+			}
+		});
+
+		// Now check for patterns without braces that look like merge fields
+		// Check for missing opening brace: !data.key.field}
+		if (/!data\.[^}]*\}/.test(message)) {
+			errors.push(
+				"Missing opening brace '{'. Use {!data.key.field} format."
+			);
+		}
+
+		// Check for missing closing brace: {!data.key.field (already handled above, but let's be explicit)
+		if (/\{!data\.[^}]*$/.test(message)) {
+			errors.push(
+				"Missing closing brace '}'. Use {!data.key.field} format."
+			);
+		}
+
+		// Check for wrong format: data.key.field (no braces, no exclamation)
+		// This is tricky because we need to avoid matching "data" in regular text
+		// Let's check for patterns that look like merge fields but are missing braces
+		const dataFieldPattern = /data\.[^}]*\}/g;
+		let dataMatch;
+		while ((dataMatch = dataFieldPattern.exec(message)) !== null) {
+			const match = dataMatch[0];
+			// Only flag if it's not part of a valid merge field
+			if (
+				!message.includes(`{!${match}`) &&
+				!message.includes(`{${match}`)
+			) {
+				errors.push(
+					"Invalid merge field format. Use {!data.key.field} format."
+				);
+				break; // Only show one error per message
+			}
+		}
+
+		// Check for wrong format: data.key.field (no braces at all, at end of line)
+		const dataFieldEndPattern = /data\.[^}]*$/g;
+		let dataEndMatch;
+		while ((dataEndMatch = dataFieldEndPattern.exec(message)) !== null) {
+			const match = dataEndMatch[0];
+			// Only flag if it's not part of a valid merge field and looks like a merge field
+			if (
+				!message.includes(`{!${match}`) &&
+				!message.includes(`{${match}`) &&
+				match.includes(".") &&
+				(match.includes("key") ||
+					match.includes("value") ||
+					match.includes("pair"))
+			) {
+				errors.push(
+					"Invalid merge field format. Use {!data.key.field} format."
+				);
+				break; // Only show one error per message
+			}
+		}
+
+		return {
+			hasErrors: errors.length > 0,
+			errorMessage: errors.length > 0 ? errors[0] : "" // Show first error
+		};
+	}
+
 	validateAndUpdateMessageInput(conversationKey, messageIndex, value) {
 		const textarea = document.querySelector(
 			`[data-conversation-key="${conversationKey}"][data-message-index="${messageIndex}"] .message-textarea`
 		);
+		const errorTextElement = document.querySelector(
+			`[data-conversation-key="${conversationKey}"][data-message-index="${messageIndex}"] .message-error-text`
+		);
 
 		if (textarea) {
-			const hasErrors = this.validateMergeFields(value);
-			if (hasErrors) {
+			const validationResult = this.validateMergeFieldsDetailed(value);
+			if (validationResult.hasErrors) {
 				textarea.classList.add("message-textarea-error");
-				textarea.title =
-					"Invalid merge field detected. Check that data keys match exactly (including spaces).";
+				textarea.title = validationResult.errorMessage;
+				if (errorTextElement) {
+					errorTextElement.textContent =
+						validationResult.errorMessage;
+					errorTextElement.style.display = "block";
+				}
 			} else {
 				textarea.classList.remove("message-textarea-error");
 				textarea.title = "";
+				if (errorTextElement) {
+					errorTextElement.textContent = "";
+					errorTextElement.style.display = "none";
+				}
 			}
 		}
 	}
@@ -940,6 +1157,7 @@ class JsonDataEditor {
 			delete this.processedConversations[conversationKey];
 			this.renderConversations();
 			this.processConversations();
+			this.markAsChanged(); // Mark as changed after deleting conversation
 			this.showToast("Conversation deleted", "success");
 		}
 	}
@@ -1093,6 +1311,7 @@ class JsonDataEditor {
 
 		// Show the download button
 		downloadBtn.style.display = "inline-flex";
+		this.updateDownloadButton();
 	}
 
 	showLoadingSpinner() {
