@@ -697,6 +697,11 @@ class JsonDataEditor {
 			? "conversation-json-error"
 			: "conversation-json";
 
+		// Check conversation structure validation
+		const structureValidation =
+			this.validateConversationStructure(conversationKey);
+		const hasStructureError = structureValidation.hasErrors;
+
 		const isEditingTitle = this.editingConversationKey === conversationKey;
 
 		div.innerHTML = `
@@ -732,6 +737,11 @@ class JsonDataEditor {
                     </button>
                 </div>
             </div>
+            ${
+				hasStructureError
+					? `<div class="conversation-structure-error">${structureValidation.errorMessage}</div>`
+					: ""
+			}
 
             <div class="conversation-split">
                 <div class="conversation-input">
@@ -1117,6 +1127,30 @@ class JsonDataEditor {
 		};
 	}
 
+	validateConversationStructure(conversationKey) {
+		const conversation = this.jsonData.conversations[conversationKey];
+
+		// Check if conversation has at least 2 messages (minimum pair)
+		if (conversation.length < 2) {
+			return {
+				hasErrors: true,
+				errorMessage:
+					"Conversation must have at least 2 messages (user/agent pair)."
+			};
+		}
+
+		// Check if conversation has even number of messages (pairs)
+		if (conversation.length % 2 !== 0) {
+			return {
+				hasErrors: true,
+				errorMessage:
+					"Conversation must have an even number of messages (user/agent pairs)."
+			};
+		}
+
+		return { hasErrors: false, errorMessage: "" };
+	}
+
 	// Test function to verify validation logic (for debugging)
 	testValidation() {
 		const testCases = [
@@ -1131,7 +1165,7 @@ class JsonDataEditor {
 			{ input: "{!data.Patrick Go.key}}", shouldHaveError: true } // Extra closing brace
 		];
 
-		console.log("Testing validation logic:");
+		console.log("Testing merge field validation logic:");
 		testCases.forEach((testCase, index) => {
 			const result = this.validateMergeFieldsDetailed(testCase.input);
 			const passed = result.hasErrors === testCase.shouldHaveError;
@@ -1144,6 +1178,49 @@ class JsonDataEditor {
 			);
 			if (!passed) {
 				console.log(`  Error message: ${result.errorMessage}`);
+			}
+		});
+
+		console.log("\nTesting conversation structure validation:");
+		const structureTestCases = [
+			{ messages: [], shouldHaveError: false }, // Empty conversation
+			{ messages: ["User message"], shouldHaveError: true }, // 1 message (odd)
+			{
+				messages: ["User message", "Agent message"],
+				shouldHaveError: false
+			}, // 2 messages (even)
+			{ messages: ["User", "Agent", "User"], shouldHaveError: true }, // 3 messages (odd)
+			{
+				messages: ["User", "Agent", "User", "Agent"],
+				shouldHaveError: false
+			} // 4 messages (even)
+		];
+
+		structureTestCases.forEach((testCase, index) => {
+			// Temporarily set a test conversation
+			const originalConversation =
+				this.jsonData.conversations["Test Structure"];
+			this.jsonData.conversations["Test Structure"] = testCase.messages;
+
+			const result = this.validateConversationStructure("Test Structure");
+			const passed = result.hasErrors === testCase.shouldHaveError;
+			console.log(
+				`Structure Test ${index + 1}: ${passed ? "PASS" : "FAIL"} - ${
+					testCase.messages.length
+				} messages - Expected error: ${
+					testCase.shouldHaveError
+				}, Got error: ${result.hasErrors}`
+			);
+			if (!passed) {
+				console.log(`  Error message: ${result.errorMessage}`);
+			}
+
+			// Restore original conversation
+			if (originalConversation) {
+				this.jsonData.conversations["Test Structure"] =
+					originalConversation;
+			} else {
+				delete this.jsonData.conversations["Test Structure"];
 			}
 		});
 	}

@@ -37,6 +37,13 @@
 			"Invalid field: {!data.Patrick Go.invalid}",
 			"Random text: {pizza}",
 			"Wrong format: data.Patrick Go.key"
+		],
+		"Test Structure Error1": [],
+		"Test Structure Error2": ["User message 1"],
+		"Test Structure Error3": [
+			"User message 1",
+			"Agent response 1",
+			"User message 2"
 		]
 	},
 	"processedConversations": {
