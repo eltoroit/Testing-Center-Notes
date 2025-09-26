@@ -1045,18 +1045,29 @@ class JsonDataEditor {
 			}
 		});
 
-		// Now check for patterns without braces that look like merge fields
-		// Check for missing opening brace: !data.key.field}
-		if (/!data\.[^}]*\}/.test(message)) {
-			errors.push(
-				"Missing opening brace '{'. Use {!data.key.field} format."
-			);
+		// Check for unbalanced braces - simple and reliable
+		const openBraces = (message.match(/\{/g) || []).length;
+		const closeBraces = (message.match(/\}/g) || []).length;
+		if (openBraces !== closeBraces) {
+			if (openBraces > closeBraces) {
+				errors.push(
+					"Missing closing brace '}'. Use {!data.key.field} format."
+				);
+			} else {
+				errors.push(
+					"Missing opening brace '{'. Use {!data.key.field} format."
+				);
+			}
 		}
 
-		// Check for missing closing brace: {!data.key.field (already handled above, but let's be explicit)
-		if (/\{!data\.[^}]*$/.test(message)) {
+		// Now check for patterns without braces that look like merge fields
+		// Check for missing opening brace: !data.key.field} (but not {!data.key.field})
+		if (
+			/!data\.[^}]*\}/.test(message) &&
+			!/\{!data\.[^}]*\}/.test(message)
+		) {
 			errors.push(
-				"Missing closing brace '}'. Use {!data.key.field} format."
+				"Missing opening brace '{'. Use {!data.key.field} format."
 			);
 		}
 
@@ -1104,6 +1115,37 @@ class JsonDataEditor {
 			hasErrors: errors.length > 0,
 			errorMessage: errors.length > 0 ? errors[0] : "" // Show first error
 		};
+	}
+
+	// Test function to verify validation logic (for debugging)
+	testValidation() {
+		const testCases = [
+			{ input: "{!data.Patrick Go.key}", shouldHaveError: false },
+			{ input: "{data.Patrick Go.key}", shouldHaveError: true },
+			{ input: "!data.Patrick Go.key}", shouldHaveError: true },
+			{ input: "{!data.Patrick Go.key", shouldHaveError: true },
+			{ input: "data.Patrick Go.key", shouldHaveError: true },
+			{ input: "{!data.NonExistentKey.key}", shouldHaveError: true },
+			{ input: "{!data.Patrick Go.invalid}", shouldHaveError: true },
+			{ input: "{{!data.Patrick Go.key}", shouldHaveError: true }, // Extra opening brace
+			{ input: "{!data.Patrick Go.key}}", shouldHaveError: true } // Extra closing brace
+		];
+
+		console.log("Testing validation logic:");
+		testCases.forEach((testCase, index) => {
+			const result = this.validateMergeFieldsDetailed(testCase.input);
+			const passed = result.hasErrors === testCase.shouldHaveError;
+			console.log(
+				`Test ${index + 1}: ${passed ? "PASS" : "FAIL"} - "${
+					testCase.input
+				}" - Expected error: ${testCase.shouldHaveError}, Got error: ${
+					result.hasErrors
+				}`
+			);
+			if (!passed) {
+				console.log(`  Error message: ${result.errorMessage}`);
+			}
+		});
 	}
 
 	validateAndUpdateMessageInput(conversationKey, messageIndex, value) {
