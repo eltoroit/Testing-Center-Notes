@@ -1165,10 +1165,12 @@ export class UIRenderer {
 			);
 		}
 
-		// Update all conversation elements
-		Array.from(this.foldedConversations).forEach((key) =>
-			this.updateConversationFoldState(key)
-		);
+		// Update all conversation elements - get all conversation keys, not just folded ones
+		const conversationElements = querySelectorAll("[data-key]");
+		conversationElements.forEach((element) => {
+			const key = element.dataset.key;
+			if (key) this.updateConversationFoldState(key);
+		});
 	}
 
 	/**
