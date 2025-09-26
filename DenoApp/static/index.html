@@ -16,51 +16,80 @@
 			<!-- Header -->
 			<header class="header">
 				<h1>ELTOROit Agentforce Testing Center Helper</h1>
-				<h1>Conversation History Editor</h1>
+				<h2>Conversation History Editor</h2>
 				<p>
 					Helps you edit the conversation history of your Agentforce
 					Testing Center
 				</p>
 			</header>
 
-			<!-- Controls -->
-			<div class="controls">
-				<div class="file-operations">
-					<div class="file-upload">
-						<label for="fileInput" class="file-input-label">
-							<i class="fas fa-upload"></i> Upload JSON File
-						</label>
-						<input
-							type="file"
-							id="fileInput"
-							accept=".json"
-							style="display: none"
-						/>
-					</div>
-					<button
-						id="downloadBtn"
-						class="btn btn-primary"
+			<!-- Mode 1: Initial State (Empty) -->
+			<div id="initialState" class="initial-state">
+				<div class="initial-actions">
+					<input
+						type="file"
+						id="fileInput"
+						accept=".json"
 						style="display: none"
+					/>
+					<button id="uploadBtn" class="btn btn-primary btn-large">
+						<i class="fas fa-upload"></i> Upload JSON File
+					</button>
+					<button
+						id="startNewProjectBtn"
+						class="btn btn-success btn-large"
 					>
-						<i class="fas fa-download"></i> Download JSON
+						<i class="fas fa-plus-circle"></i> Start New Project
 					</button>
 				</div>
 			</div>
 
-			<!-- Main Content -->
-			<div id="mainContent" class="main-content" style="display: none">
-				<!-- Tabs -->
-				<div class="tabs">
-					<button id="dataTab" class="tab-btn active">
-						<i class="fas fa-database"></i> Data
-					</button>
-					<button id="conversationsTab" class="tab-btn">
-						<i class="fas fa-comments"></i> Conversations
-					</button>
+			<!-- Mode 2: Full App (After Initialization) -->
+			<div id="fullApp" style="display: none">
+				<!-- Navigation -->
+				<div class="app-navigation">
+					<input
+						type="file"
+						id="fileInput2"
+						accept=".json"
+						style="display: none"
+					/>
+
+					<!-- File Operations Button Group -->
+					<div class="btn-group file-operations-group">
+						<button id="uploadBtn2" class="btn btn-primary">
+							<i class="fas fa-upload"></i> Upload JSON
+						</button>
+						<button id="downloadBtn" class="btn btn-primary">
+							<i class="fas fa-download"></i> Download JSON
+						</button>
+						<button
+							id="initializeProjectBtn"
+							class="btn btn-primary"
+						>
+							<i class="fas fa-plus-circle"></i> New Project
+						</button>
+					</div>
+
+					<!-- Panel Navigation Button Group -->
+					<div class="btn-group panel-navigation-group">
+						<button
+							id="dataPanelBtn"
+							class="btn btn-outline-primary active"
+						>
+							<i class="fas fa-database"></i> Data
+						</button>
+						<button
+							id="conversationsPanelBtn"
+							class="btn btn-outline-primary"
+						>
+							<i class="fas fa-comments"></i> Conversations
+						</button>
+					</div>
 				</div>
 
-				<!-- Data Section -->
-				<div id="dataSection" class="tab-content active">
+				<!-- Data Panel -->
+				<div id="dataPanel" class="panel-content active">
 					<div class="section-header">
 						<h2><i class="fas fa-database"></i> Data Entries</h2>
 						<div class="header-actions">
@@ -77,19 +106,21 @@
 						</div>
 					</div>
 
-					<div id="dataTable" class="table-container">
-						<table id="dataTableContent" class="data-table">
-							<thead>
-								<tr>
-									<th>Key</th>
-									<th>Value</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody id="dataTableBody">
-								<!-- Data rows will be populated here -->
-							</tbody>
-						</table>
+					<div id="dataTableContainer">
+						<div id="dataTable" class="table-container">
+							<table id="dataTableContent" class="data-table">
+								<thead>
+									<tr>
+										<th>Key</th>
+										<th>Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="dataTableBody">
+									<!-- Data rows will be populated here -->
+								</tbody>
+							</table>
+						</div>
 						<div id="noDataMessage" class="empty-state">
 							<i class="fas fa-inbox"></i>
 							<p>
@@ -100,11 +131,17 @@
 					</div>
 				</div>
 
-				<!-- Conversations Section -->
-				<div id="conversationsSection" class="tab-content">
+				<!-- Conversations Panel -->
+				<div id="conversationsPanel" class="panel-content">
 					<div class="section-header">
 						<h2><i class="fas fa-comments"></i> Conversations</h2>
 						<div class="header-actions">
+							<button
+								id="foldUnfoldAllBtn"
+								class="btn btn-secondary"
+							>
+								<i class="fas fa-chevron-down"></i> Fold All
+							</button>
 							<button
 								id="openMergeFieldModalBtn2"
 								class="btn btn-info"
@@ -131,12 +168,12 @@
 						</p>
 					</div>
 				</div>
+			</div>
 
-				<!-- Loading Spinner -->
-				<div id="loadingSpinner" class="loading-spinner">
-					<div class="spinner"></div>
-					<p>Processing conversations...</p>
-				</div>
+			<!-- Loading Spinner -->
+			<div id="loadingSpinner" class="loading-spinner">
+				<div class="spinner"></div>
+				<p>Processing conversations...</p>
 			</div>
 
 			<!-- Toast Notifications -->

@@ -28,13 +28,13 @@ body {
 
 .header h1 {
 	font-size: 3rem;
-	margin-bottom: 10px;
+	margin-bottom: -15px;
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .header h2 {
 	font-size: 2.5rem;
-	margin-bottom: 10px;
+	/* margin-bottom: 10px; */
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -302,6 +302,10 @@ body {
 	border-radius: 8px;
 	margin-bottom: 20px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	position: sticky;
+	top: 60px;
+	/* Height of tabs */
+	z-index: 90;
 }
 
 .section-header h2 {
@@ -352,6 +356,136 @@ body {
 	opacity: 1;
 	transform: translateY(0);
 }
+
+/* Mode 1: Initial State */
+.initial-state {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 60vh;
+	padding: 40px 20px;
+}
+
+.initial-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	align-items: center;
+}
+
+.btn-large {
+	padding: 15px 30px;
+	font-size: 1.1rem;
+	min-width: 200px;
+}
+
+/* Mode 2: Full App Navigation */
+.app-navigation {
+	display: flex;
+	gap: 20px;
+	padding: 20px;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+}
+
+/* Button Groups */
+.btn-group {
+	display: inline-flex;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-group .btn {
+	border-radius: 0;
+	border-right-width: 0;
+	margin: 0;
+	position: relative;
+}
+
+.btn-group .btn:first-child {
+	border-top-left-radius: 8px;
+	border-bottom-left-radius: 8px;
+}
+
+.btn-group .btn:last-child {
+	border-top-right-radius: 8px;
+	border-bottom-right-radius: 8px;
+	border-right-width: 1px;
+}
+
+/* File Operations Button Group */
+.file-operations-group {
+	background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+	padding: 4px;
+}
+
+.file-operations-group .btn {
+	background: white;
+	border-color: #2196f3;
+	color: #1976d2;
+	font-weight: 600;
+	min-width: 140px;
+}
+
+.file-operations-group .btn:hover {
+	background: #2196f3;
+	color: white;
+	transform: translateY(-1px);
+}
+
+.file-operations-group .btn.btn-secondary {
+	background: #f5f5f5;
+	border-color: #757575;
+	color: #424242;
+}
+
+.file-operations-group .btn.btn-secondary:hover {
+	background: #757575;
+	color: white;
+}
+
+/* Panel Navigation Button Group */
+.panel-navigation-group {
+	background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+	padding: 4px;
+}
+
+.panel-navigation-group .btn {
+	background: white;
+	border-color: #9c27b0;
+	color: #7b1fa2;
+	font-weight: 600;
+	min-width: 120px;
+}
+
+.panel-navigation-group .btn:hover {
+	background: #9c27b0;
+	color: white;
+	transform: translateY(-1px);
+}
+
+.panel-navigation-group .btn.active {
+	background: #9c27b0;
+	color: white;
+	border-color: #9c27b0;
+	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Panel Content */
+.panel-content {
+	display: none;
+}
+
+.panel-content.active {
+	display: block;
+}
+
 
 
 .merge-field-generator {
@@ -552,6 +686,58 @@ body {
 	background: white;
 }
 
+/* Data table container for scrolling */
+#dataTableContainer {
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+	margin-top: 20px;
+}
+
+/* Conversations container for scrolling */
+#conversationsContainer {
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+	margin-top: 20px;
+}
+
+/* Responsive adjustments for sticky scrolling */
+@media (max-width: 768px) {
+	.tabs {
+		top: 0;
+	}
+
+	.section-header {
+		top: 50px;
+		/* Smaller height for mobile tabs */
+	}
+
+	.tab-content {
+		height: calc(100vh - 150px);
+	}
+
+	#dataTableContainer,
+	#conversationsContainer {
+		max-height: calc(100vh - 200px);
+	}
+
+	/* Button groups responsive */
+	.app-navigation {
+		flex-direction: column;
+		gap: 15px;
+	}
+
+	.btn-group {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.file-operations-group .btn,
+	.panel-navigation-group .btn {
+		flex: 1;
+		min-width: auto;
+	}
+}
+
 .data-table th {
 	background: #f8f9fa;
 	padding: 12px;
@@ -684,6 +870,38 @@ body {
 .conversation-title-error {
 	color: #dc3545 !important;
 	font-weight: 600 !important;
+}
+
+.conversation-content {
+	transition: all 0.3s ease-in-out;
+	overflow: hidden;
+}
+
+.fold-toggle-btn {
+	background: none;
+	border: none;
+	font-size: 16px;
+	color: #6c757d;
+	cursor: pointer;
+	padding: 6px 8px;
+	margin-right: 8px;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+	min-width: 24px;
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.fold-toggle-btn:hover {
+	background-color: #f8f9fa;
+	color: #495057;
+	transform: scale(1.1);
+}
+
+.fold-toggle-btn i {
+	font-size: 14px;
 }
 
 .messages-list {

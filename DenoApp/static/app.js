@@ -6,43 +6,90 @@ class JsonDataEditor {
 		};
 		this.processedConversations = {};
 		this.isLoading = false;
-		this.showDataTable = true;
-		this.showConversationsTable = true;
 		this.editingDataId = null;
 		this.editingConversationKey = null;
 		this.editingMessageIndex = null;
 		this.hasUnsavedChanges = false;
+		this.foldedConversations = new Set(); // Track which conversations are folded
+		this.currentPanel = "data"; // Track current panel (data or conversations)
+		this.isInitialized = false; // Track if app has been initialized
 
 		this.initializeEventListeners();
 		this.setupBeforeUnloadWarning();
+		this.showInitialState();
 	}
 
 	initializeEventListeners() {
-		// File operations
+		// Mode 1: Initial state buttons
 		document
 			.getElementById("fileInput")
 			.addEventListener("change", (e) => this.handleFileUpload(e));
-		document
-			.getElementById("downloadBtn")
-			.addEventListener("click", () => this.handleDownload());
 
-		// Tab controls
 		document
-			.getElementById("dataTab")
-			.addEventListener("click", () => this.switchTab("data"));
-		document
-			.getElementById("conversationsTab")
-			.addEventListener("click", () => this.switchTab("conversations"));
+			.getElementById("uploadBtn")
+			.addEventListener("click", () =>
+				document.getElementById("fileInput").click()
+			);
 
-		// Data table controls
 		document
-			.getElementById("addDataBtn")
-			.addEventListener("click", () => this.addDataRow());
+			.getElementById("startNewProjectBtn")
+			.addEventListener("click", () => this.startNewProject());
 
-		// Conversations controls
-		document
-			.getElementById("addConversationBtn")
-			.addEventListener("click", () => this.addConversation());
+		// Mode 2: Full app buttons (only if elements exist)
+		const fileInput2 = document.getElementById("fileInput2");
+		const uploadBtn2 = document.getElementById("uploadBtn2");
+		const initializeProjectBtn = document.getElementById(
+			"initializeProjectBtn"
+		);
+		const dataPanelBtn = document.getElementById("dataPanelBtn");
+		const conversationsPanelBtn = document.getElementById(
+			"conversationsPanelBtn"
+		);
+		const downloadBtn = document.getElementById("downloadBtn");
+
+		if (fileInput2) {
+			fileInput2.addEventListener("change", (e) =>
+				this.handleFileUpload(e)
+			);
+		}
+		if (uploadBtn2) {
+			uploadBtn2.addEventListener("click", () =>
+				document.getElementById("fileInput2").click()
+			);
+		}
+		if (initializeProjectBtn) {
+			initializeProjectBtn.addEventListener("click", () =>
+				this.initializeProject()
+			);
+		}
+		if (dataPanelBtn) {
+			dataPanelBtn.addEventListener("click", () =>
+				this.switchPanel("data")
+			);
+		}
+		if (conversationsPanelBtn) {
+			conversationsPanelBtn.addEventListener("click", () =>
+				this.switchPanel("conversations")
+			);
+		}
+		if (downloadBtn) {
+			downloadBtn.addEventListener("click", () => this.handleDownload());
+		}
+
+		// Data table controls (only if elements exist)
+		const addDataBtn = document.getElementById("addDataBtn");
+		if (addDataBtn) {
+			addDataBtn.addEventListener("click", () => this.addDataRow());
+		}
+
+		// Conversations controls (only if elements exist)
+		const addConversationBtn =
+			document.getElementById("addConversationBtn");
+		if (addConversationBtn) {
+			addConversationBtn.addEventListener("click", () =>
+				this.addConversation()
+			);
+		}
 
 		// Merge field modal controls (only if elements exist)
 		const openMergeFieldModalBtn = document.getElementById(
@@ -75,6 +122,86 @@ class JsonDataEditor {
 			modalCancelBtn.addEventListener("click", () =>
 				this.closeMergeFieldModal()
 			);
+		}
+
+		// Fold/Unfold all button
+		const foldUnfoldAllBtn = document.getElementById("foldUnfoldAllBtn");
+		if (foldUnfoldAllBtn) {
+			foldUnfoldAllBtn.addEventListener("click", () =>
+				this.toggleFoldAll()
+			);
+		}
+	}
+
+	showInitialState() {
+		document.getElementById("initialState").style.display = "flex";
+		document.getElementById("fullApp").style.display = "none";
+		this.isInitialized = false;
+	}
+
+	showFullApp() {
+		document.getElementById("initialState").style.display = "none";
+		document.getElementById("fullApp").style.display = "block";
+		this.isInitialized = true;
+		this.switchPanel("data"); // Default to data panel
+	}
+
+	startNewProject() {
+		this.jsonData = {
+			data: {},
+			conversations: {}
+		};
+		this.processedConversations = {};
+		this.hasUnsavedChanges = false;
+		this.showFullApp();
+		this.renderAll();
+		this.markAsSaved();
+		this.showToast("New project created successfully!", "success");
+	}
+
+	initializeProject() {
+		if (this.hasUnsavedChanges) {
+			const confirmed = confirm(
+				"You have unsaved changes. Are you sure you want to start a new project? " +
+					"Make sure to download your current work first!"
+			);
+			if (!confirmed) return;
+		}
+		this.startNewProject();
+	}
+
+	switchPanel(panelName) {
+		this.currentPanel = panelName;
+
+		// Update button states
+		const dataPanelBtn = document.getElementById("dataPanelBtn");
+		const conversationsPanelBtn = document.getElementById(
+			"conversationsPanelBtn"
+		);
+
+		if (dataPanelBtn && conversationsPanelBtn) {
+			if (panelName === "data") {
+				dataPanelBtn.classList.add("active");
+				conversationsPanelBtn.classList.remove("active");
+			} else {
+				conversationsPanelBtn.classList.add("active");
+				dataPanelBtn.classList.remove("active");
+			}
+		}
+
+		// Show/hide panels
+		const dataPanel = document.getElementById("dataPanel");
+		const conversationsPanel =
+			document.getElementById("conversationsPanel");
+
+		if (dataPanel && conversationsPanel) {
+			if (panelName === "data") {
+				dataPanel.classList.add("active");
+				conversationsPanel.classList.remove("active");
+			} else {
+				conversationsPanel.classList.add("active");
+				dataPanel.classList.remove("active");
+			}
 		}
 	}
 
@@ -152,7 +279,7 @@ class JsonDataEditor {
 					// No conversion needed - we'll work with the object format directly
 
 					this.jsonData = uploadedData;
-					this.showMainContent();
+					this.showFullApp();
 					this.renderDataTable();
 					this.renderConversations();
 					this.processConversations();
@@ -198,20 +325,6 @@ class JsonDataEditor {
 
 		this.markAsSaved(); // Mark as saved after successful download
 		this.showToast("File downloaded successfully", "success");
-	}
-
-	switchTab(tabName) {
-		// Update tab buttons
-		document
-			.querySelectorAll(".tab-btn")
-			.forEach((btn) => btn.classList.remove("active"));
-		document.getElementById(tabName + "Tab").classList.add("active");
-
-		// Update tab content
-		document
-			.querySelectorAll(".tab-content")
-			.forEach((content) => content.classList.remove("active"));
-		document.getElementById(tabName + "Section").classList.add("active");
 	}
 
 	// Data Table Methods
@@ -687,6 +800,8 @@ class JsonDataEditor {
 		div.className = "conversation-group";
 		div.dataset.key = conversationKey;
 
+		const isFolded = this.foldedConversations.has(conversationKey);
+
 		const processedConversation =
 			this.processedConversations[conversationKey] || [];
 		const outputJson = JSON.stringify(processedConversation, null, 2);
@@ -718,6 +833,15 @@ class JsonDataEditor {
 		div.innerHTML = `
             <div class="conversation-header">
                 <div class="conversation-title">
+                    <button class="fold-toggle-btn" onclick="app.toggleFold('${conversationKey}')" title="${
+			isFolded ? "Unfold" : "Fold"
+		} conversation">
+                        ${
+							isFolded
+								? '<i class="fa-solid fa-chevron-right"></i>'
+								: '<i class="fa-solid fa-chevron-down"></i>'
+						}
+                    </button>
                     ${
 						isEditingTitle
 							? `<input type="text" value="${conversationKey}" class="conversation-title-input ${
@@ -762,7 +886,10 @@ class JsonDataEditor {
 					: ""
 			}
 
-            <div class="conversation-split">
+            <div class="conversation-content" style="display: ${
+				isFolded ? "none" : "block"
+			}">
+                <div class="conversation-split">
                 <div class="conversation-input">
                     <h4>Input Messages</h4>
                     <div class="messages-list">
@@ -793,6 +920,7 @@ class JsonDataEditor {
 		}">${outputJson}</div>
                 </div>
             </div>
+            </div>
         `;
 
 		// Add event listeners to message textareas
@@ -815,6 +943,74 @@ class JsonDataEditor {
 		});
 
 		return div;
+	}
+
+	toggleFold(conversationKey) {
+		const isCurrentlyFolded = this.foldedConversations.has(conversationKey);
+
+		if (isCurrentlyFolded) {
+			this.foldedConversations.delete(conversationKey);
+		} else {
+			this.foldedConversations.add(conversationKey);
+		}
+
+		// Update the specific conversation element
+		this.updateConversationFoldState(conversationKey);
+	}
+
+	updateConversationFoldState(conversationKey) {
+		const conversationElement = document.querySelector(
+			`[data-key="${conversationKey}"]`
+		);
+		if (!conversationElement) return;
+
+		const isFolded = this.foldedConversations.has(conversationKey);
+		const contentElement = conversationElement.querySelector(
+			".conversation-content"
+		);
+		const foldButton =
+			conversationElement.querySelector(".fold-toggle-btn");
+
+		if (contentElement) {
+			contentElement.style.display = isFolded ? "none" : "block";
+		}
+
+		if (foldButton) {
+			// Update button symbol and tooltip
+			foldButton.innerHTML = isFolded
+				? '<i class="fa-solid fa-chevron-right"></i>'
+				: '<i class="fa-solid fa-chevron-down"></i>';
+			foldButton.title = `${isFolded ? "Unfold" : "Fold"} conversation`;
+		}
+	}
+
+	toggleFoldAll() {
+		const foldUnfoldAllBtn = document.getElementById("foldUnfoldAllBtn");
+		if (!foldUnfoldAllBtn) return;
+
+		const allConversationKeys = Object.keys(this.jsonData.conversations);
+		const allFolded = allConversationKeys.every((key) =>
+			this.foldedConversations.has(key)
+		);
+
+		if (allFolded) {
+			// Unfold all
+			this.foldedConversations.clear();
+			foldUnfoldAllBtn.innerHTML =
+				'<i class="fas fa-chevron-down"></i> Fold All';
+		} else {
+			// Fold all
+			allConversationKeys.forEach((key) =>
+				this.foldedConversations.add(key)
+			);
+			foldUnfoldAllBtn.innerHTML =
+				'<i class="fas fa-chevron-up"></i> Unfold All';
+		}
+
+		// Update all conversation elements
+		allConversationKeys.forEach((key) =>
+			this.updateConversationFoldState(key)
+		);
 	}
 
 	createMessageInput(conversationKey, messageIndex, message) {
@@ -990,6 +1186,16 @@ class JsonDataEditor {
 	validateMergeFieldsDetailed(message) {
 		if (!message || !this.jsonData.data) {
 			return { hasErrors: false, errorMessage: "" };
+		}
+
+		// Check if message is blank or contains only whitespace
+		if (message.trim().length === 0) {
+			return {
+				hasErrors: true,
+				errors: [
+					"Message cannot be blank. Please enter at least one non-whitespace character."
+				]
+			};
 		}
 
 		const availableKeys = Object.keys(this.jsonData.data);
@@ -1460,23 +1666,6 @@ class JsonDataEditor {
 		}
 	}
 
-	showMainContent() {
-		const mainContent = document.getElementById("mainContent");
-		const downloadBtn = document.getElementById("downloadBtn");
-
-		// Show the main content with animation
-		mainContent.style.display = "block";
-		setTimeout(() => {
-			mainContent.classList.add("show");
-			// Setup merge field generator after content is visible
-			this.setupMergeFieldGenerator();
-		}, 10);
-
-		// Show the download button
-		downloadBtn.style.display = "inline-flex";
-		this.updateDownloadButton();
-	}
-
 	showLoadingSpinner() {
 		document.getElementById("loadingSpinner").classList.add("show");
 	}
@@ -1530,8 +1719,8 @@ class JsonDataEditor {
 		this.renderDataTable();
 		this.renderConversations();
 		this.processConversations();
-		// Only setup merge field generator if main content is visible
-		if (document.getElementById("mainContent").style.display !== "none") {
+		// Only setup merge field generator if full app is visible
+		if (this.isInitialized) {
 			this.setupMergeFieldGenerator();
 		}
 	}
