@@ -65,6 +65,15 @@ export function createElement(tag, attributes = {}, content = "") {
 			Object.entries(value).forEach(([dataKey, dataValue]) => {
 				element.dataset[dataKey] = dataValue;
 			});
+		} else if (key === "style") {
+			// Handle style object
+			if (typeof value === "object" && value !== null) {
+				Object.entries(value).forEach(([styleProperty, styleValue]) => {
+					element.style[styleProperty] = styleValue;
+				});
+			} else {
+				element.style.cssText = value;
+			}
 		} else {
 			element.setAttribute(key, value);
 		}

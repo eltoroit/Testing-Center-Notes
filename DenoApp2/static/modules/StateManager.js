@@ -224,11 +224,17 @@ export class StateManager {
 	}
 
 	/**
-	 * Setup global click logging to capture all user interactions
+	 * Setup global click logging to capture only interactive element clicks
 	 */
 	setupGlobalClickLogging() {
 		document.addEventListener("click", (event) => {
 			const element = event.target;
+
+			// Only log clicks on interactive elements
+			if (!this.isInteractiveElement(element)) {
+				return;
+			}
+
 			const elementInfo = {
 				tagName: element.tagName,
 				id: element.id,
@@ -281,6 +287,79 @@ export class StateManager {
 		});
 
 		logger.debug("Global click logging initialized");
+	}
+
+	/**
+	 * Check if an element is interactive (should be logged)
+	 * @param {HTMLElement} element - Element to check
+	 * @returns {boolean} - True if element is interactive
+	 */
+	isInteractiveElement(element) {
+		// Interactive HTML elements
+		const interactiveTags = [
+			"BUTTON",
+			"A",
+			"INPUT",
+			"SELECT",
+			"TEXTAREA",
+			"LABEL",
+			"SUMMARY",
+			"DETAILS",
+			"MENU",
+			"MENUITEM"
+		];
+
+		// Check if element has an interactive tag
+		if (interactiveTags.includes(element.tagName)) {
+			return true;
+		}
+
+		// Check if element has interactive attributes
+		if (
+			element.hasAttribute("onclick") ||
+			element.hasAttribute("onmousedown") ||
+			element.hasAttribute("onmouseup") ||
+			(element.hasAttribute("role") &&
+				["button", "link", "menuitem", "tab"].includes(
+					element.getAttribute("role")
+				))
+		) {
+			return true;
+		}
+
+		// Check if element has interactive classes (common patterns)
+		const interactiveClasses = [
+			"btn",
+			"button",
+			"clickable",
+			"link",
+			"menu-item",
+			"tab",
+			"nav-item",
+			"dropdown",
+			"toggle",
+			"switch",
+			"checkbox",
+			"radio"
+		];
+
+		const className = element.className.toLowerCase();
+		if (interactiveClasses.some((cls) => className.includes(cls))) {
+			return true;
+		}
+
+		// Check if element has cursor pointer style
+		const computedStyle = window.getComputedStyle(element);
+		if (computedStyle.cursor === "pointer") {
+			return true;
+		}
+
+		// Check if element is focusable
+		if (element.tabIndex >= 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -684,6 +763,19 @@ export class StateManager {
 	}
 
 	/**
+	 * Handle message change without re-rendering the input (for real-time updates)
+	 * @param {string} conversationKey - Conversation key
+	 * @param {number} messageIndex - Message index
+	 * @param {string} value - New message value
+	 */
+	handleMessageChangeSilent(conversationKey, messageIndex, value) {
+		this.dataManager.updateMessage(conversationKey, messageIndex, value);
+		this.markAsChanged();
+		// Only re-render the output, not the entire conversation
+		this.renderConversationOutput(conversationKey);
+	}
+
+	/**
 	 * Toggle conversation fold
 	 * @param {string} conversationKey - Conversation key
 	 */
@@ -969,6 +1061,29 @@ export class StateManager {
 			processedConversations,
 			this.editingConversationKey,
 			this.validationManager
+		);
+	}
+
+	/**
+	 * Render only the output for a specific conversation (without re-rendering inputs)
+	 * @param {string} conversationKey - Conversation key
+	 */
+	renderConversationOutput(conversationKey) {
+		const conversation = this.dataManager.getConversation(conversationKey);
+		const processedConversation =
+			this.dataManager.getProcessedConversation(conversationKey);
+		if (!conversation || !processedConversation) {
+			logger.warn(
+				"Conversation or processed conversation not found for output render",
+				{ conversationKey }
+			);
+			return;
+		}
+
+		logger.debug("Rendering conversation output only", { conversationKey });
+		this.uiRenderer.renderConversationOutput(
+			conversationKey,
+			processedConversation
 		);
 	}
 

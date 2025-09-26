@@ -179,7 +179,9 @@ export const APP_CONFIG = {
 };
 
 export const DEFAULT_DATA_STRUCTURE = {
-	data: {},
+	data: {
+		sample: "123"
+	},
 	conversations: {}
 };
 

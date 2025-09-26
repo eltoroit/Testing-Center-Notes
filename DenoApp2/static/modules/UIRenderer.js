@@ -581,6 +581,199 @@ export class UIRenderer {
 	}
 
 	/**
+	 * Render only the output section for a specific conversation
+	 * @param {string} conversationKey - Conversation key
+	 * @param {Array} processedConversation - Processed conversation data
+	 */
+	renderConversationOutput(conversationKey, processedConversation) {
+		// Find the existing conversation element
+		const conversationElement = querySelector(
+			`[data-key="${conversationKey}"]`
+		);
+		if (!conversationElement) {
+			logger.warn("Conversation element not found for output update", {
+				conversationKey
+			});
+			return;
+		}
+
+		// Find the output section within the conversation
+		const outputSection = conversationElement.querySelector(
+			".conversation-output"
+		);
+		if (!outputSection) {
+			logger.warn("Output section not found in conversation", {
+				conversationKey
+			});
+			return;
+		}
+
+		// Generate new output
+		const outputJson = formatJSON(processedConversation);
+		const hasUnresolvedFields = outputJson.includes("{!data.");
+		const outputClass = hasUnresolvedFields
+			? APP_CONFIG.CSS_CLASSES.JSON_ERROR
+			: "conversation-json";
+
+		// Update the output div
+		const outputDiv = outputSection.querySelector(
+			".conversation-json, .conversation-json-error, .output-json, .output-json-error, .output-json-success"
+		);
+		if (outputDiv) {
+			outputDiv.textContent = outputJson;
+			outputDiv.className = outputClass;
+			outputDiv.title = hasUnresolvedFields
+				? "Contains unresolved merge fields"
+				: "";
+		}
+
+		// Update the output header indicator
+		const outputTitle = outputSection.querySelector(".output-header h4");
+		if (outputTitle) {
+			outputTitle.innerHTML = `Output (JSON) ${
+				hasUnresolvedFields
+					? '<span class="error-indicator" title="Contains unresolved merge fields"><i class="fas fa-exclamation-triangle"></i></span>'
+					: ""
+			}`;
+		}
+
+		logger.debug("Conversation output updated", {
+			conversationKey,
+			hasUnresolvedFields
+		});
+	}
+
+	/**
+	 * Directly update conversation output text without re-rendering (for real-time updates)
+	 * @param {string} conversationKey - Conversation key
+	 */
+	updateConversationOutputDirect(conversationKey) {
+		// Find the existing conversation element
+		const conversationElement = querySelector(
+			`[data-key="${conversationKey}"]`
+		);
+		if (!conversationElement) {
+			logger.warn(
+				"Conversation element not found for direct output update",
+				{
+					conversationKey
+				}
+			);
+			return;
+		}
+
+		// Check if conversation is folded
+		const isFolded = this.foldedConversations.has(conversationKey);
+		logger.debug("Conversation fold state", { conversationKey, isFolded });
+
+		// If conversation is folded, unfold it so user can see the output updates
+		if (isFolded) {
+			logger.debug("Unfolding conversation to show output updates", {
+				conversationKey
+			});
+			this.foldedConversations.delete(conversationKey);
+			this.updateConversationFoldState(conversationKey);
+		}
+
+		// Find the output section within the conversation
+		const outputSection = conversationElement.querySelector(
+			".conversation-output"
+		);
+		if (!outputSection) {
+			logger.warn("Output section not found in conversation", {
+				conversationKey
+			});
+			return;
+		}
+
+		// Debug: Check what's actually in the output section
+		logger.debug("Output section contents", {
+			conversationKey,
+			outputSectionHTML: outputSection.innerHTML,
+			outputSectionChildren: outputSection.children.length,
+			outputSectionClasses: outputSection.className
+		});
+
+		// Get processed conversation data directly from dataManager
+		if (!window.app || !window.app.dataManager) {
+			logger.warn("App or dataManager not available for output update", {
+				conversationKey
+			});
+			return;
+		}
+
+		const processedConversation =
+			window.app.dataManager.getProcessedConversation(conversationKey);
+		if (!processedConversation) {
+			logger.warn("Processed conversation not found", {
+				conversationKey
+			});
+			return;
+		}
+
+		// Generate new output
+		const outputJson = formatJSON(processedConversation);
+		const hasUnresolvedFields = outputJson.includes("{!data.");
+
+		logger.debug("About to update output", {
+			conversationKey,
+			outputJson,
+			hasUnresolvedFields,
+			outputSectionFound: !!outputSection
+		});
+
+		// Update only the output text content
+		const outputDiv = outputSection.querySelector(
+			".conversation-json, .conversation-json-error, .output-json, .output-json-error, .output-json-success"
+		);
+		if (outputDiv) {
+			const oldText = outputDiv.textContent;
+			outputDiv.textContent = outputJson;
+			// Update classes for error indication
+			outputDiv.className = hasUnresolvedFields
+				? APP_CONFIG.CSS_CLASSES.JSON_ERROR
+				: "conversation-json";
+			outputDiv.title = hasUnresolvedFields
+				? "Contains unresolved merge fields"
+				: "";
+
+			logger.debug("Output div updated successfully", {
+				conversationKey,
+				oldText: oldText.substring(0, 50) + "...",
+				newText: outputJson.substring(0, 50) + "...",
+				outputDivFound: !!outputDiv,
+				textChanged: oldText !== outputJson
+			});
+		} else {
+			const allDivs = Array.from(outputSection.querySelectorAll("div"));
+			logger.warn("Output div not found", {
+				conversationKey,
+				availableClasses: allDivs.map((div) => div.className),
+				divCount: allDivs.length,
+				allDivsHTML: allDivs.map((div) =>
+					div.outerHTML.substring(0, 100)
+				)
+			});
+		}
+
+		// Update the output header indicator
+		const outputTitle = outputSection.querySelector(".output-header h4");
+		if (outputTitle) {
+			outputTitle.innerHTML = `Output (JSON) ${
+				hasUnresolvedFields
+					? '<span class="error-indicator" title="Contains unresolved merge fields"><i class="fas fa-exclamation-triangle"></i></span>'
+					: ""
+			}`;
+		}
+
+		logger.debug("Conversation output updated directly", {
+			conversationKey,
+			hasUnresolvedFields,
+			outputJson
+		});
+	}
+
+	/**
 	 * Create message input element
 	 * @param {string} conversationKey - Conversation key
 	 * @param {number} messageIndex - Message index
@@ -595,13 +788,12 @@ export class UIRenderer {
 		validationManager
 	) {
 		const role = getRoleForMessage(messageIndex);
+
+		// Always validate the message, but only show errors for empty messages if they were previously edited
 		const validationResult = validationManager.validateMergeFields(message);
 		const hasErrors = validationResult.hasErrors;
 		const errorClass = hasErrors
 			? APP_CONFIG.CSS_CLASSES.MESSAGE_ERROR
-			: "";
-		const errorTooltip = hasErrors
-			? `title="${validationResult.errorMessage}"`
 			: "";
 
 		const row = createElement("div", {
@@ -617,18 +809,98 @@ export class UIRenderer {
 		appendChild(labelDiv, roleBadge);
 
 		const inputDiv = createElement("div", { className: "message-input" });
-		const textarea = createElement("textarea", {
+		const textareaId = `message-${conversationKey}-${messageIndex}`;
+
+		// Debug logging (after textareaId is declared)
+		console.log("createMessageInput validation:", {
+			textareaId,
+			message,
+			hasErrors,
+			errorMessage: validationResult.errorMessage,
+			shouldShow: hasErrors ? "block" : "none"
+		});
+		const textareaAttributes = {
+			id: textareaId,
 			className: `message-textarea ${errorClass}`,
 			rows: "2",
 			placeholder: `Enter ${role} message...`,
-			textContent: message,
-			...errorTooltip
-		});
+			textContent: message
+		};
+
+		// Add title attribute if there are errors
+		if (hasErrors) {
+			textareaAttributes.title = validationResult.errorMessage;
+		}
+
+		const textarea = createElement("textarea", textareaAttributes);
 
 		const errorText = createElement("div", {
 			className: "message-error-text",
 			textContent: validationResult.errorMessage,
 			style: { display: hasErrors ? "block" : "none" }
+		});
+
+		// Add real-time validation and debounced data update on input
+		let debounceTimeout = null;
+		textarea.addEventListener("input", (event) => {
+			const currentValue = event.target.value;
+			const realTimeValidation =
+				validationManager.validateMergeFields(currentValue);
+
+			// Debug logging
+			console.log("Real-time validation (input):", {
+				textareaId,
+				currentValue,
+				hasErrors: realTimeValidation.hasErrors,
+				errorMessage: realTimeValidation.errorMessage,
+				willShow: realTimeValidation.hasErrors ? "block" : "none"
+			});
+
+			// Update error display immediately
+			if (realTimeValidation.hasErrors) {
+				textarea.classList.add(APP_CONFIG.CSS_CLASSES.MESSAGE_ERROR);
+				errorText.textContent = realTimeValidation.errorMessage;
+				errorText.style.display = "block";
+				textarea.title = realTimeValidation.errorMessage;
+			} else {
+				textarea.classList.remove(APP_CONFIG.CSS_CLASSES.MESSAGE_ERROR);
+				errorText.style.display = "none";
+				textarea.title = "";
+			}
+
+			// Debounced data update and output refresh (300ms delay) - direct update to avoid focus loss
+			clearTimeout(debounceTimeout);
+			debounceTimeout = setTimeout(() => {
+				logger.debug("Debounced update triggered", {
+					conversationKey,
+					messageIndex,
+					currentValue
+				});
+
+				// Update the data silently
+				if (window.app && window.app.dataManager) {
+					window.app.dataManager.updateMessage(
+						conversationKey,
+						messageIndex,
+						currentValue
+					);
+					window.app.markAsChanged();
+
+					// Directly update the output text without re-rendering the entire conversation
+					this.updateConversationOutputDirect(conversationKey);
+				} else {
+					logger.warn(
+						"App or dataManager not available for debounced update",
+						{
+							conversationKey,
+							hasApp: !!window.app,
+							hasDataManager: !!(
+								window.app && window.app.dataManager
+							)
+						}
+					);
+				}
+			}, 300);
 		});
 
 		appendChild(inputDiv, textarea);
